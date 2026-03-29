@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Информационная безопасность — тренажёр</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c1017;
+      --surface: #151b26;
+      --elevated: #1c2433;
+      --border: #2a3548;
+      --text: #e8ecf2;
+      --muted: #8b98ad;
+      --accent: #5eead4;
+      --accent-dim: #2dd4bf33;
+      --warn: #fbbf24;
+      --danger: #f87171;
+      --ok: #34d399;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Outfit", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 28px 20px 80px;
+    }
+    header {
+      margin-bottom: 28px;
+    }
+    header h1 {
+      font-size: clamp(1.45rem, 4vw, 2rem);
+      font-weight: 700;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 62ch;
+    }
+    .hero-art {
+      margin-top: 20px;
+      padding: 20px;
+      background: linear-gradient(145deg, var(--elevated), var(--surface));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .hero-art svg { flex-shrink: 0; }
+    .hero-art .lead {
+      flex: 1;
+      min-width: 220px;
+    }
+    .hero-art .lead strong { color: var(--accent); }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 28px 0 20px;
+    }
+    .tabs button {
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .tabs button:hover {
+      border-color: var(--muted);
+      transform: translateY(-1px);
+    }
+    .tabs button.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    section.panel {
+      display: none;
+      animation: fade 0.25s ease;
+    }
+    section.panel.active { display: block; }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: none; }
+    }
+    .cheatsheet {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      margin-bottom: 20px;
+    }
+    .cheatsheet h2 {
+      margin: 0 0 12px;
+      font-size: 1.15rem;
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .pill {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.78rem;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      color: var(--accent);
+    }
+    .cheatsheet ul {
+      margin: 0;
+      padding-left: 1.2rem;
+      color: var(--muted);
+    }
+    .cheatsheet li { margin: 8px 0; }
+    .cheatsheet li strong { color: var(--text); }
+    .topic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .topic-card {
+      border: 1px solid var(--border);
+      background: var(--elevated);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .topic-card strong { color: var(--text); }
+    .full-cheat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 14px;
+    }
+    .full-cheat h3 {
+      margin: 0 0 10px;
+      font-size: 1.04rem;
+    }
+    .full-cheat p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+    .full-cheat details {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--elevated);
+      padding: 10px 12px;
+      margin: 8px 0;
+    }
+    .full-cheat summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .qa-mini {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .qa-mini strong { color: var(--accent); }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .controls input[type="search"] ,
+    .controls select {
+      font: inherit;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--elevated);
+      color: var(--text);
+      min-width: 200px;
+    }
+    .controls label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .stat {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-left: auto;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 14px;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .q-num {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.75rem;
+      color: var(--warn);
+    }
+    .q-text {
+      font-weight: 600;
+      margin: 0 0 12px;
+      font-size: 1.02rem;
+    }
+    .opts {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .opts li {
+      padding: 8px 10px;
+      margin: 6px 0;
+      border-radius: 10px;
+      background: var(--elevated);
+      border: 1px solid transparent;
+      font-size: 0.95rem;
+    }
+    .opts li.correct {
+      border-color: var(--ok);
+      background: #34d39918;
+    }
+    .opts li .key {
+      font-family: "JetBrains Mono", monospace;
+      color: var(--accent);
+      margin-right: 8px;
+      font-weight: 600;
+    }
+    details.reason {
+      margin-top: 14px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+    details.reason summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--accent);
+      list-style: none;
+    }
+    details.reason summary::-webkit-details-marker { display: none; }
+    details.reason p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .quiz-card .opts li {
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .quiz-card .opts li:hover {
+      border-color: var(--muted);
+    }
+    .quiz-card .opts li.selected {
+      border-color: var(--warn);
+      background: #fbbf2418;
+    }
+    .quiz-card .opts li.wrong {
+      border-color: var(--danger);
+      background: #f8717120;
+    }
+    .quiz-card .opts li.right {
+      border-color: var(--ok);
+      background: #34d39918;
+    }
+    .quiz-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .btn {
+      font-family: inherit;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--elevated);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .btn.primary {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .progress {
+      height: 6px;
+      background: var(--elevated);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .progress > div {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #22d3ee);
+      width: 0%;
+      transition: width 0.25s;
+    }
+    .result-box {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: var(--radius);
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      display: none;
+    }
+    .result-box.show { display: block; }
+    footer {
+      margin-top: 36px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="wrap">
+    <header>
+      <h1>Информационная безопасность</h1>
+      <p>Локальный тренажёр: картинки-схемы, все вопросы из твоего списка, правильные ответы и короткие объяснения «почему так».</p>
+      <div class="hero-art">
+        <svg width="120" height="100" viewBox="0 0 120 100" aria-hidden="true">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#5eead4" />
+              <stop offset="100%" stop-color="#38bdf8" />
+            </linearGradient>
+          </defs>
+          <rect x="8" y="22" width="104" height="58" rx="12" fill="#1c2433" stroke="#2a3548" stroke-width="2" />
+          <path d="M38 48h44v12H38z" fill="url(#g1)" opacity="0.3" />
+          <path d="M42 52c8-14 28-14 36 0" fill="none" stroke="url(#g1)" stroke-width="3" stroke-linecap="round" />
+          <circle cx="60" cy="45" r="6" fill="url(#g1)" />
+          <rect x="52" y="62" width="16" height="12" rx="3" fill="url(#g1)" />
+        </svg>
+        <div class="lead">
+          <strong>Как пользоваться:</strong> открой этот файл в браузере (двойной клик). Вкладка «Шпаргалка» — база за 10 минут. «Все вопросы» — читай с раскрытием «Почему». «Режим теста» — проверь себя.
+        </div>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Режимы">
+      <button type="button" class="active" data-tab="theory">Шпаргалка</button>
+      <button type="button" data-tab="bank">Все вопросы</button>
+      <button type="button" data-tab="quiz">Режим теста</button>
+    </nav>
+
+    <section id="panel-theory" class="panel active" aria-labelledby="theory-heading">
+      <div class="cheatsheet">
+        <h2 id="theory-heading">Мини-шпаргалка</h2>
+        <div class="pill-row" aria-hidden="true">
+          <span class="pill">CIA</span>
+          <span class="pill">Угроза ≠ уязвимость</span>
+          <span class="pill">Хеш ≠ шифр</span>
+          <span class="pill">AAA</span>
+        </div>
+        <svg width="100%" height="90" viewBox="0 0 640 90" style="max-width:100%;margin:12px 0" aria-label="Схема CIA">
+          <rect x="10" y="15" width="190" height="58" rx="10" fill="#151b26" stroke="#5eead4" />
+          <text x="105" y="38" text-anchor="middle" fill="#e8ecf2" font-size="14" font-family="Outfit,sans-serif">Конфиденциальность</text>
+          <text x="105" y="58" text-anchor="middle" fill="#8b98ad" font-size="12" font-family="Outfit,sans-serif">не видеть лишним</text>
+          <rect x="220" y="15" width="190" height="58" rx="10" fill="#151b26" stroke="#38bdf8" />
+          <text x="315" y="38" text-anchor="middle" fill="#e8ecf2" font-size="14">Целостность</text>
+          <text x="315" y="58" text-anchor="middle" fill="#8b98ad" font-size="12">данные не испортили</text>
+          <rect x="430" y="15" width="190" height="58" rx="10" fill="#151b26" stroke="#fbbf24" />
+          <text x="525" y="38" text-anchor="middle" fill="#e8ecf2" font-size="14">Доступность</text>
+          <text x="525" y="58" text-anchor="middle" fill="#8b98ad" font-size="12">доступно когда надо</text>
+        </svg>
+        <ul>
+          <li><strong>Информационная безопасность (ИБ)</strong> — практики и средства, чтобы защищать данные от несанкционированного доступа, порчи и потерь.</li>
+          <li><strong>Угроза</strong> — что-то потенциально опасное; <strong>уязвимость</strong> — слабое место; <strong>риск</strong> — насколько реально «угроза × уязвимость».</li>
+          <li><strong>Шифрование</strong> обратимо (есть ключ); <strong>хеш</strong> — в основном в одну сторону, часто для проверки целостности.</li>
+          <li><strong>Симметрия:</strong> один общий ключ (AES, DES, 3DES). <strong>Асимметрия:</strong> пара ключей RSA/ECC/DSA.</li>
+          <li><strong>AAA:</strong> Authentication (кто ты) → Authorization (что можно) → Accounting (что делал, аудит).</li>
+          <li><strong>RADIUS</strong> — открытый стандарт AAA; часто шифрует пароль; <strong>TACACS+</strong> (Cisco) — шифрует весь пакет, обычно TCP/49.</li>
+        </ul>
+        <div class="topic-grid">
+          <div class="topic-card"><strong>1–29:</strong> база ИБ (CIA, угрозы, фишинг, антивирус, firewall, зачем шифрование).</div>
+          <div class="topic-card"><strong>30–40:</strong> симметричное/асимметричное шифрование, AES/RSA, TLS, VPN, PFS.</div>
+          <div class="topic-card"><strong>41–58:</strong> защита сетевых устройств, MFA, SSH vs Telnet, IDS/IPS, сегментация, логи.</div>
+          <div class="topic-card"><strong>59–68:</strong> RSA и крипто-база: публичный ключ, приватный ключ, хеширование.</div>
+          <div class="topic-card"><strong>69–78:</strong> AAA (Authentication/Authorization/Accounting), RADIUS, TACACS+, факторы.</div>
+          <div class="topic-card"><strong>79–105:</strong> LAN security, DAI, DHCP Snooping, HMAC, WireGuard, GDPR, Zero Trust.</div>
+        </div>
+      </div>
+
+      <div class="full-cheat">
+        <h3>Полная шпаргалка по всем 105 вопросам</h3>
+        <p>Ниже всё в простом формате: <strong>номер</strong> → правильная буква → почему это так. Открывай блоки по 15 вопросов и учи по шагам.</p>
+        <div id="theory-full-list"></div>
+      </div>
+    </section>
+
+    <section id="panel-bank" class="panel" aria-label="Банк вопросов">
+      <div class="controls">
+        <input type="search" id="bank-filter" placeholder="Поиск по тексту..." autocomplete="off" />
+        <label><input type="checkbox" id="bank-shuffle" /> Перемешать</label>
+        <span class="stat" id="bank-stat"></span>
+      </div>
+      <div id="bank-list"></div>
+    </section>
+
+    <section id="panel-quiz" class="panel" aria-label="Тест">
+      <div class="controls">
+        <label>
+          Вопросов подряд
+          <select id="quiz-count">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="40">40</option>
+            <option value="9999">Все</option>
+          </select>
+        </label>
+        <button type="button" class="btn primary" id="quiz-start">Новый тест</button>
+        <span class="stat" id="quiz-stat"></span>
+      </div>
+      <div class="progress" aria-hidden="true"><div id="quiz-bar"></div></div>
+      <div id="quiz-area">
+        <p class="card" style="margin:0;color:var(--muted)">Нажми «Новый тест», чтобы начать. После прохождения появится короткий разбор ✓/✗.</p>
+      </div>
+      <div class="result-box" id="quiz-result"></div>
+    </section>
+
+    <footer>
+      Файл полностью офлайн (кроме шрифтов Google). Путь: <span style="font-family:JetBrains Mono,monospace">infosec-prep/index.html</span>
+    </footer>
+  </div>
+
+  <script>
+    const LETTERS = ["A", "B", "C", "D", "E"];
+
+    const QUESTIONS = [
+      { q: "What is information security?", opts: ["A method of storing data only", "A set of measures to protect data from unauthorized access, damage, or loss", "A type of programming language", "A network protocol", "A database system"], a: 1, why: "ИБ — это не один инструмент, а комплекс организационных и технических мер для защиты информации." },
+      { q: "Which of the following is NOT a basic principle of information security?", opts: ["Confidentiality", "Integrity", "Availability", "Scalability", "Protection"], a: 3, why: "Базовая «троица» — CIA: конфиденциальность, целостность, доступность. Масштабируемость относится к архитектуре/IT, а не к фундаментальному принципу ИБ." },
+      { q: "What does confidentiality mean?", opts: ["Data is always available", "Data cannot be changed", "Data is protected from unauthorized access", "Data is stored in the cloud", "Data is duplicated"], a: 2, why: "Конфиденциальность = раскрытие только авторизованным." },
+      { q: "Which threat involves tricking users into revealing sensitive information?", opts: ["Firewall attack", "Phishing", "Encryption", "Backup", "Compression"], a: 1, why: "Фишинг — социальная атака через обман (письма, сайты-двойники), чтобы выманить секреты." },
+      { q: "What is the purpose of data encryption?", opts: ["To delete data permanently", "To make data accessible only to authorized users", "To increase data size", "To transfer data faster", "To store data in databases"], a: 1, why: "Шифрование делает данные нечитаемыми без ключа; читать может тот, у кого есть доступ к ключу." },
+      { q: "Which method helps verify a user’s identity?", opts: ["Encryption", "Backup", "Authentication", "Monitoring", "Compression"], a: 2, why: "Аутентификация — проверка «ты тот, за кого себя выдаёшь»." },
+      { q: "What is an example of an internal threat?", opts: ["Hacker attack", "Phishing email", "Employee negligence", "Cyber espionage", "DDoS attack"], a: 2, why: "Внутренний риск исходит от инсайдеров: ошибки, злоупотребления сотрудников и т.п." },
+      { q: "Which certification is considered one of the most prestigious in information security?", opts: ["CompTIA A+", "CISSP", "Microsoft Office Specialist", "Cisco IT Essentials", "HTML Developer"], a: 1, why: "CISSP — широко признаваемый продвинутый сертификат в области ИБ." },
+      { q: "What is the role of artificial intelligence in modern information security?", opts: ["Replacing all employees", "Detecting threats and anomalies in real time", "Deleting data automatically", "Slowing down networks", "Increasing hardware costs"], a: 1, why: "ML/AI часто применяют для корреляции событий и поиска аномалий в больших потоках данных." },
+      { q: "What is a key feature of modern cyber threats?", opts: ["Simplicity", "Low frequency", "High dynamism and automation", "Only physical damage", "No impact on users"], a: 2, why: "Атаки часто автоматизированы, быстро меняются (кампании, вредонос как сервис)." },
+      { q: "What is information security? (variant 2)", opts: ["A method of storing data", "A set of measures to protect data", "A type of computer hardware", "A programming language", "A database system"], a: 1, why: "То же самое: ИБ — меры защиты информации." },
+      { q: "What is the main goal of information security?", opts: ["Increase internet speed", "Protect data from unauthorized access", "Create new software", "Improve computer graphics", "Store large files"], a: 1, why: "Основная цель — снижать риски для ценных данных и сервисов (наряду с целостностью/доступностью)." },
+      { q: "Which of the following is NOT a component of information security?", opts: ["Confidentiality", "Integrity", "Availability", "Entertainment", "Authenticity"], a: 3, why: "«Развлечение» к модели безопасности не относится." },
+      { q: "What does confidentiality mean? (variant 2)", opts: ["Data is always available", "Data is correct and unchanged", "Data is protected from unauthorized access", "Data is deleted", "Data is duplicated"], a: 2, why: "Конфиденциальность про доступ, не про доступность или целостность." },
+      { q: "What does integrity refer to?", opts: ["Protecting data from hackers", "Ensuring data is accurate and unchanged", "Making backups", "Encrypting files", "Deleting old data"], a: 1, why: "Целостность — нет недозволенных изменений; данные достоверны." },
+      { q: "What is availability in information security?", opts: ["Data is hidden", "Data is always accessible when needed", "Data is encrypted", "Data is compressed", "Data is duplicated"], a: 1, why: "Доступность — авторизованные пользователи получают сервис/данные в нужное время." },
+      { q: "What is a threat in information security?", opts: ["A type of software", "A potential danger to data", "A hardware device", "A network protocol", "A programming language"], a: 1, why: "Угроза — потенциальное событие/действие, которое может навредить." },
+      { q: "Which of the following is an example of a threat?", opts: ["Antivirus software", "Firewall", "Hacker attack", "Backup system", "Encryption"], a: 2, why: "Атака — угроза; антивирус, фаервол, бэкап — средства защиты." },
+      { q: "What is a vulnerability?", opts: ["A strong password", "A weakness in a system", "A type of virus", "A secure network", "A data backup"], a: 1, why: "Уязвимость — слабое место, которым может воспользоваться угроза." },
+      { q: "What is encryption used for?", opts: ["Deleting data", "Protecting data by converting it into a secure form", "Copying files", "Speeding up computers", "Organizing folders"], a: 1, why: "Шифрование преобразует данные так, что без ключа их трудно понять." },
+      { q: "Which tool helps protect against malware?", opts: ["Text editor", "Antivirus software", "Web browser", "Media player", "Compiler"], a: 1, why: "Антивирус/EDR — типичная линия защиты от вредоносного ПО." },
+      { q: "What is unauthorized access?", opts: ["Access with permission", "Access without permission", "Access using password", "Access through admin", "Access to public data"], a: 1, why: "Несанкционированный доступ — без прав или в обход политики." },
+      { q: "What is a firewall?", opts: ["A physical wall", "A security system that controls network traffic", "A type of virus", "A database", "A programming tool"], a: 1, why: "Межсетевой экран фильтрует/контролирует трафик по правилам." },
+      { q: "What is data loss?", opts: ["Data being destroyed or unavailable", "Data duplication", "Data encryption", "Data backup", "Data sharing"], a: 0, why: "Потеря данных — когда их нельзя восстановить или они уничтожены/недоступны." },
+      { q: "Why is information security important in digitalization?", opts: ["To protect valuable information", "To reduce electricity usage", "To increase screen resolution", "To create games", "To improve hardware design"], a: 0, why: "Цифровизация увеличивает объём и ценность данных — растут риски утечек и сбоев." },
+      { q: "What are technical means of information security?", opts: ["Only software tools", "Only physical protection", "Only network devices", "Only encryption algorithms", "A combination of hardware, software, and hardware-software tools"], a: 4, why: "Реальная защита почти всегда комбинация: железо + ПО + крипто + СЗИ." },
+      { q: "What is the main purpose of traffic encryption?", opts: ["Hide information from unauthorized users", "Speed up the Internet", "Store data", "Compress files", "Delete data"], a: 0, why: "Шифрование канала мешает перехватчикам читать содержимое." },
+      { q: "What happens to readable data without encryption?", opts: ["It is deleted", "It is compressed", "It can be easily intercepted and read", "It becomes faster", "It is automatically protected"], a: 2, why: "Плоский текст по сети читается любым, кто видит пакеты (пассивный перехват)." },
+      { q: "Why is encryption considered reliable?", opts: ["Because it is free", "Because it is fast", "Because it deletes data", "Because it uses simple algorithms", "Because breaking it requires significant time and resources"], a: 4, why: "Стойкость при правильной реализации и управлении ключами сводится к вычислительной сложности атаки." },
+      { q: "What is symmetric encryption?", opts: ["Use of two different keys", "Use of one shared key for encryption and decryption", "No key usage", "Public key only", "Random encryption"], a: 1, why: "Симметрия: один ключ на обе операции (нужно безопасно его раздать)." },
+      { q: "What is the main disadvantage of symmetric encryption?", opts: ["It is too slow", "It uses many keys", "It is too complex", "The shared key can be intercepted", "It cannot encrypt data"], a: 3, why: "Слабое место — безопасная доставка/хранение общего секрета." },
+      { q: "What is asymmetric encryption?", opts: ["Using one key", "Using no key", "Using public and private key pair", "Using random numbers", "Using passwords only"], a: 2, why: "Асимметрия: публичный и приватный ключ (разные математически связанные)." },
+      { q: "Which algorithms are used in symmetric encryption?", opts: ["RSA, ECC", "Diffie-Hellman", "DSA, RSA", "SHA, MD5", "AES, DES, 3DES"], a: 4, why: "SHA/MD5 — хеши, а не шифры симметричные; RSA — асимметрия." },
+      { q: "Which algorithms are used in asymmetric encryption?", opts: ["AES, DES", "3DES, AES", "RSA, ECC, DSA", "MD5, SHA", "HMAC only"], a: 2, why: "RSA/ECC/DSA относят к асимметричным схемам; HMAC — конструкция с секретом для целостности." },
+      { q: "What is a VPN?", opts: ["A virtual private network for secure communication", "A database", "A programming language", "A type of virus", "A file format"], a: 0, why: "VPN строит защищённый «туннель» поверх публичной сети (клиент ↔ шлюз)." },
+      { q: "What does TLS/SSL provide?", opts: ["File storage", "Secure transmission of data", "Data deletion", "Network slowdown", "Hardware protection"], a: 1, why: "TLS криптографически защищает канал (аутентификация сервера, шифрование, целостность)." },
+      { q: "What is a \"handshake\" in encryption?", opts: ["Deleting keys", "Compressing data", "Encrypting files", "Exchanging keys between client and server", "Sending emails"], a: 3, why: "Handshake — фаза согласования параметров и обмена ключевым материалом." },
+      { q: "What is encapsulation (tunneling)?", opts: ["Data deletion", "Wrapping data into another protocol", "Decrypting data", "Compressing files", "Blocking traffic"], a: 1, why: "Инкапсуляция в туннеле: полезная нагрузка одного протокола несётся внутри другого." },
+      { q: "What is AES-256 known for?", opts: ["Low security", "Fast hacking", "Very high level of protection", "No encryption", "Simple algorithm"], a: 2, why: "AES-256 при корректной реализации и ключах считается современным стандартом шифрования." },
+      { q: "What does Perfect Forward Secrecy (PFS) ensure?", opts: ["Faster connection", "Constant change of encryption keys", "Data deletion", "No encryption", "Single key usage"], a: 1, why: "PFS (упрощённо): компрометация долгосрочного ключа не раскрывает прошлые сессии — используются эфемерные ключи." },
+      { q: "What is the main goal of securing network devices?", opts: ["Increase network speed", "Protect devices from unauthorized access", "Improve graphics", "Store files", "Delete data"], a: 1, why: "Защита админ-доступа, прошивок, конфигов — чтобы не захватили инфраструктуру." },
+      { q: "Which device is used to filter network traffic?", opts: ["Printer", "Scanner", "Firewall", "Monitor", "Keyboard"], a: 2, why: "Фильтрация на границах/сегментах — роль firewall/политик." },
+      { q: "What is a firewall? (variant 2)", opts: ["A physical wall", "A security system controlling incoming and outgoing traffic", "A type of virus", "A database", "A cable"], a: 1, why: "То же: контроль входящего/исходящего трафика." },
+      { q: "What is the purpose of access control?", opts: ["Speed up network", "Restrict unauthorized users", "Store passwords", "Create backups", "Delete logs"], a: 1, why: "Контроль доступа реализует политику «кто что может»." },
+      { q: "What is a strong password?", opts: ["123456", "password", "A combination of letters, numbers, and symbols", "Only numbers", "Only letters"], a: 2, why: "Длина и разнообразие символов повышают стойкость к перебору." },
+      { q: "What is multi-factor authentication (MFA)?", opts: ["One password login", "Two or more verification methods", "No authentication", "Only biometric login", "Only email verification"], a: 1, why: "MFA комбинирует факторы: знание, владение, биометрия и т.д." },
+      { q: "Which protocol is used for secure remote access?", opts: ["HTTP", "FTP", "SSH", "Telnet", "SMTP"], a: 2, why: "SSH шифрует сеанс администрирования; Telnet передаёт открытый текст." },
+      { q: "Why is Telnet insecure?", opts: ["It is too fast", "It encrypts data", "It transmits data in plain text", "It blocks traffic", "It stores passwords"], a: 2, why: "Telnet не обеспечивает шифрование — утечка учётных данных и команд." },
+      { q: "What is device hardening?", opts: ["Making devices heavier", "Reducing vulnerabilities by disabling unnecessary services", "Increasing storage", "Installing games", "Deleting data"], a: 1, why: "Hardening: минимальная поверхность атаки, патчи, отключение лишнего." },
+      { q: "What is the purpose of IDS (Intrusion Detection System)?", opts: ["Detect suspicious activity", "Block traffic", "Encrypt data", "Store files", "Speed up network"], a: 0, why: "IDS фиксирует подозрительное; блокировка — у IPS/SGFW по-разному." },
+      { q: "What is IPS (Intrusion Prevention System)?", opts: ["Only detection", "Backup system", "Data storage", "Encryption", "Detection and prevention of attacks"], a: 4, why: "IPS может активно останавливать вредоносный трафик при срабатывании сигнатур/аномалий." },
+      { q: "What is network segmentation?", opts: ["Dividing network into smaller parts", "Combining networks", "Deleting devices", "Increasing speed", "Blocking users"], a: 0, why: "Сегментация и VLAN изолируют зоны, ограничивая распространение атак." },
+      { q: "Why is logging important?", opts: ["To slow down system", "To create passwords", "To delete data", "To encrypt traffic", "To record events for monitoring and analysis"], a: 4, why: "Логи нужны для мониторинга, расследований (forensics), доказательств." },
+      { q: "What is a router security function?", opts: ["Directing and filtering traffic", "Printing documents", "Playing media", "Storing files", "Scanning documents"], a: 0, why: "Маршрутизатор управляет потоками; ACL/политики — часть контроля доступа к сети." },
+      { q: "What is the risk of default credentials?", opts: ["Easy unauthorized access", "Faster login", "Better security", "Data encryption", "Improved performance"], a: 0, why: "Стандартные логин/пароль известны всем — первая проверка атакующих." },
+      { q: "What is a VPN used for in network security?", opts: ["Data deletion", "Virus creation", "File storage", "Speed increase", "Secure remote connection"], a: 4, why: "Удалённый безопасный доступ к корпоративной сети — классический сценарий VPN." },
+      { q: "What is the purpose of antivirus software on network devices?", opts: ["Detect and remove malware", "Increase speed", "Store passwords", "Encrypt data", "Manage users"], a: 0, why: "На хостах/шлюзах антивирус ищет известные угрозы (часто вместе с другими мерами)." },
+      { q: "What is physical security of network devices?", opts: ["Software update", "Managing users", "Encrypting data", "Monitoring traffic", "Protecting hardware from theft or damage"], a: 4, why: "Физическая защита: шкафы, охрана, доступ в помещение, пожаробезопасность." },
+      { q: "What is the main principle of RSA cryptosystem?", opts: ["Asymmetric encryption with public and private keys", "Hashing only", "Symmetric encryption", "Data compression", "Network routing"], a: 0, why: "RSA — асимметричная к crypto-система на основе модульной арифметики." },
+      { q: "What forms the public key in RSA?", opts: ["Two prime numbers p and q", "Only private exponent d", "Modulus n and exponent e", "Hash value", "Symmetric key"], a: 2, why: "Пара (n, e) публична; простые p и q секретно участвуют в построении ключей." },
+      { q: "What is the security of RSA based on?", opts: ["Difficulty of factoring large numbers", "Speed of computation", "Network protocols", "Password complexity", "Data compression"], a: 0, why: "Стойкость связана со сложностью факторизации модуля n." },
+      { q: "What is the role of the private key in RSA?", opts: ["Encrypt messages", "Verify public keys", "Compress files", "Generate network traffic", "Decrypt messages and sign data"], a: 4, why: "При стандартной схеме шифрование публичным, расшифрование и подпись — приватным." },
+      { q: "Which operation is used in RSA encryption?", opts: ["Addition", "Multiplication only", "Modular exponentiation", "Sorting", "Hashing only"], a: 2, why: "RSA использует возведение в степень по модулю n." },
+      { q: "What is the main purpose of encryption?", opts: ["Protect information from unauthorized access", "Increase data size", "Speed up processing", "Delete data", "Compress files"], a: 0, why: "Смысл шифрования — снизить риск раскрытия и подделки (с учётом режимов и ключей)." },
+      { q: "Which type of encryption uses one key for both encryption and decryption?", opts: ["Asymmetric encryption", "Public-key encryption", "Hashing", "Symmetric encryption", "Digital signature"], a: 3, why: "Один секретный ключ — признак симметрии." },
+      { q: "Which type of encryption uses two keys (public and private)?", opts: ["Symmetric encryption", "Block encryption", "Stream encryption", "Asymmetric encryption", "Hashing"], a: 3, why: "Два связанных ключа — асимметрия." },
+      { q: "What is an example of a symmetric encryption algorithm?", opts: ["AES", "RSA", "DSA", "ECC", "Diffie-Hellman"], a: 0, why: "AES — типичный симметричный блоковый шифр." },
+      { q: "What is hashing used for in cryptography?", opts: ["Ensuring data integrity", "Decrypting data", "Encrypting data", "Compressing files", "Routing traffic"], a: 0, why: "Хеш фиксирует отпечаток данных; изменение входа меняет хеш (для контроля целостности)." },
+      { q: "Which component of AAA is responsible for verifying the identity of a user?", opts: ["Authentication", "Authorization", "Accounting", "Availability", "Administration"], a: 0, why: "Authentication — проверка личности." },
+      { q: "What does Authorization define in the AAA model?", opts: ["Collecting data on consumed resources", "Verifying a user's password", "Registering login and logout times", "Determining user rights and privileges after a successful login", "Encrypting network traffic"], a: 3, why: "Authorization решает «что разрешено» после успешного входа." },
+      { q: "What is the primary purpose of Accounting in AAA?", opts: ["Tracking user actions and collecting resource usage statistics", "Issuing digital certificates", "Resetting forgotten passwords", "Limiting access to physical switch ports", "Managing user databases"], a: 0, why: "Accounting/аудит — кто что сделал, сколько ресурсов потратил." },
+      { q: "Which protocol is an open standard widely used for AAA in networks?", opts: ["TACACS+", "SNMP", "HTTP", "RADIUS", "FTP"], a: 3, why: "RADIUS — де-факто стандарт AAA на доступе Wi‑Fi/VPN и т.д." },
+      { q: "What is a key difference between RADIUS and TACACS+ for AAA?", opts: ["RADIUS encrypts only the password, while TACACS+ encrypts the entire packet", "TACACS+ uses UDP, while RADIUS uses TCP", "RADIUS separates the three functions, while TACACS+ combines them", "TACACS+ does not support command authorization", "RADIUS is a Cisco proprietary protocol"], a: 0, why: "Классическое сравнение учебников: частичное шифрование у RADIUS vs полный пакет у TACACS+." },
+      { q: "Which belongs to \"something you know\" in MFA/AAA factors?", opts: ["Smart card", "Fingerprint", "PIN or password", "Retinal scan", "Device geolocation"], a: 2, why: "Знание — пароль/PIN; карта — владение; отпечаток — биометрия." },
+      { q: "When might an admin need Accounting for security?", opts: ["For incident analysis and forensic investigations", "To configure allowed working hours", "To create password complexity policies", "For integration with Active Directory", "To block unauthorized MAC addresses"], a: 0, why: "Логи сессий и команд критичны при расследовании инцидентов." },
+      { q: "Which AAA protocol was developed by Cisco and uses TCP port 49?", opts: ["Diameter", "Kerberos", "LDAP", "TACACS+", "RADIUS"], a: 3, why: "TACACS+ Cisco, TCP/49." },
+      { q: "MFA implies:", opts: ["Using several different passwords", "Verifying access rights on multiple servers", "Using two or more different types of factors (knowledge, possession, inherence)", "Re-verifying the user every 15 minutes", "Mandatory use of biometrics"], a: 2, why: "Мультифакторность = разные ТИПЫ факторов, а не просто два пароля." },
+      { q: "What happens if Authentication is configured but not Authorization?", opts: ["The user will log in but may be unable to perform actions (or will get default access)", "The user will not be able to log in", "The system will automatically grant administrator rights", "The user session will be immediately terminated", "Login data will not be recorded in the log"], a: 0, why: "Логин возможен, но без явной авторизации часто дают минимум прав или «по умолчанию»." },
+      { q: "Which hash property makes it infeasible to find two inputs with the same hash?", opts: ["One-way (Irreversibility)", "Collision resistance", "Avalanche effect", "Fixed output length", "Determinism"], a: 1, why: "Collision resistance — стойкость к коллизиям." },
+      { q: "Which LAN security protocol is used for port-based authentication under 802.1X?", opts: ["EAP (Extensible Authentication Protocol)", "DHCP Snooping", "VTP (VLAN Trunking Protocol)", "SNMPv3", "SSH"], a: 0, why: "802.1X использует EAP для обмена методами аутентификации между supplicant и сервером." },
+      { q: "Which hash function is considered most secure for modern systems?", opts: ["MD5", "SHA-1", "SHA-256", "RIPEMD-160", "CRC32"], a: 2, why: "MD5/SHA-1 устарели криптографически; SHA-256 из семейства SHA-2 — современный выбор." },
+      { q: "Which LAN attack does Dynamic ARP Inspection (DAI) help prevent?", opts: ["ARP Poisoning (Man-in-the-Middle)", "Brute-force password attack", "DDoS attack on a server", "VLAN Hopping", "MAC Address Table Overflow"], a: 0, why: "DAI сверяет ARP с доверенной DHCP snooping-базой, мешая подмене ARP." },
+      { q: "What is a \"salt\" in password hashing?", opts: ["A data compression algorithm used before hashing", "A key for symmetric encryption of the hash", "Random data added to a password before hashing to protect against rainbow tables", "A special character that a user must add to the end of their password", "A backup copy of the hash table"], a: 2, why: "Соль уникальна на пользователя/хеш и ломает предвычисленные таблицы." },
+      { q: "Port Security on Cisco switches restricts access based on:", opts: ["Source IP address", "TCP port number", "Device MAC address", "Domain username", "Operating system type"], a: 2, why: "Port security ограничивает MAC(и) на порту." },
+      { q: "Primary purpose of DHCP Snooping?", opts: ["Prevent unauthorized (rogue) DHCP servers", "Speed up IP assignment", "Reserve static addresses for servers", "Monitor channel bandwidth", "Configure inter-VLAN routing"], a: 0, why: "Trust/untrust порты + binding table против «левого» DHCP." },
+      { q: "Fundamental difference between hashing and encryption?", opts: ["Hashing is faster than encryption", "Encryption is reversible while hashing is one-way (irreversible)", "Hashing requires a private key", "Encryption always produces fixed-length output", "Hashing is only used for file transfers"], a: 1, why: "Шифрование двунаправлено с ключом; качественный хеш — практически необратим." },
+      { q: "Which mechanism helps prevent STP Root Bridge attacks?", opts: ["BPDU Guard / Root Guard", "IP Source Guard", "Sticky MAC", "Private VLANs", "Storm Control"], a: 0, why: "BPDU Guard/Root Guard защищат от нежелательных BPDU и смены корня." },
+      { q: "What is HMAC used for?", opts: ["To compress packet headers", "To manage VLANs on trunk ports", "For automatic IP address distribution", "To encrypt the entire local area network", "To ensure message integrity and authenticity using a secret key"], a: 4, why: "HMAC = хеш + секрет; MAC проверяет целостность и аутентичность сообщения." },
+      { q: "Which VPN protocol is considered modern, fast, with minimal codebase?", opts: ["PPTP", "L2TP/IPsec", "WireGuard", "SSTP", "IKEv2"], a: 2, why: "WireGuard — новое поколение с простым кодом и современной криптографией." },
+      { q: "What is \"Split Tunneling\" in VPN?", opts: ["Full encryption of all traffic", "Some traffic through VPN while other uses regular ISP", "Using two VPN servers simultaneously", "Disabling the internet if VPN drops", "Duplicating packets"], a: 1, why: "Часть маршрутов в туннель, часть напрямую — компромисс удобство/риск." },
+      { q: "Which IPsec mode encrypts only the IP Payload, leaving original IP header intact?", opts: ["Tunnel Mode", "Secure Mode", "Transport Mode", "Proxy Mode", "Direct Mode"], a: 2, why: "Transport mode защищает payload; tunnel — обычно весь IP пакет в новой оболочке." },
+      { q: "Under GDPR, what does \"Right to be forgotten\" mean?", opts: ["Hide IP address", "Request deletion of personal data under certain conditions", "Use government services anonymously", "Ban on cookies", "Change last name in a database"], a: 1, why: "Статья 17 GDPR — право на удаление при основаниях." },
+      { q: "Primary difference between Privacy and Data Security?", opts: ["Security protects against unauthorized access; Privacy controls how data is used", "They are synonyms", "Privacy only concerns paper documents", "Security is only guaranteed by the state", "Privacy does not require encryption"], a: 0, why: "Безопасность — про защиту; приватность — про согласие, цели обработки, минимизацию." },
+      { q: "What does PII stand for?", opts: ["Personal Internet Identification", "Private Internal Information", "Protected Integrated Interface", "Password Identity Index", "Personally Identifiable Information"], a: 4, why: "PII — персонально идентифицируемая информация." },
+      { q: "Which tool collects logs and correlates security events in real-time?", opts: ["DHCP", "SNMP", "SIEM (Security Information and Event Management)", "Wireshark", "Nmap"], a: 2, why: "SIEM агрегирует события, правила корреляции, дашборды SOC." },
+      { q: "Which strategy verifies security posture before granting access?", opts: ["NAC (Network Access Control)", "NAT", "QoS", "Port Fast", "Dynamic Routing"], a: 0, why: "NAC проверяет соответствие политикам (патч, антивирус) до доступа в сеть." },
+      { q: "What is Zero Trust?", opts: ["Trusting all devices inside the perimeter", "Never trust, always verify (regardless of location)", "Using only free antivirus", "Refusing cloud services", "Banning BYOD"], a: 1, why: "Zero Trust: каждый запрос проверяется; периметр не равен доверию." },
+      { q: "Which VPN uses a web browser as a client at the Application Layer?", opts: ["SSL/TLS VPN", "IPsec VPN", "GRE Tunnel", "MPLS", "Site-to-Site VPN"], a: 0, why: "SSL VPN часто через браузер/HTTPS-портал — на уровне приложения." },
+      { q: "What is a \"Kill Switch\" in a VPN application?", opts: ["Delete all data on server", "Blocks internet access if VPN connection is lost", "Cracking passwords", "Protocol for games", "Server cooling"], a: 1, why: "Kill-switch гасит обычный выход в интернет при обрыве туннеля, чтобы не «светить» трафик." },
+      { q: "Which is \"sensitive personal data\" under most laws?", opts: ["Car model", "Eye color", "Religious beliefs and health data", "List of visited websites (not linked to an ID)", "Browser type"], a: 2, why: "Особые категории: здоровье, религия, биометрия и т.д. — усиленный режим." },
+      { q: "Why is network segmentation (VLAN) used for security?", opts: ["Increase internet speed", "Monitor social media", "Merge departments into one folder", "Save IP addresses", "Limit spread of attacks and isolate traffic"], a: 4, why: "Изоляция снижает lateral movement атакующего." },
+      { q: "What is Shadow IT?", opts: ["IT night shift", "Use of software/services without IT approval", "A hacker group", "Backup to dark cloud", "Hidden Windows updates"], a: 1, why: "Теневая ИТ — использование сервисов без согласования с ИТ-отделом (облака, мессенджеры и т.д.)." },
+      { q: "HTTPS traffic? (incomplete question — closest match in list)", opts: ["PPTP", "L2TP", "SSTP", "IPsec", "GRE"], a: 2, why: "Формулировка в списке кривая: HTTPS обеспечивает TLS/SSL (его нет в ответах). Из вариантов **SSTP** туннелирует поверх HTTPS/TLS-канала у Microsoft — ближе всего к «связке с HTTPS» по смыслу теста." },
+      { q: "What does \"Data Minimization\" mean?", opts: ["Compress files before sending", "Collect only the data strictly necessary for the purpose", "Delete all data monthly", "Prohibit storing video", "Use short usernames"], a: 1, why: "Минимизация — принцип GDPR: не собирать лишнее." },
+      { q: "Which attack targets intercepted data between VPN client and server when encryption is weak?", opts: ["Phishing", "Man-in-the-Middle (MitM)", "SQL Injection", "Bluejacking", "DDoS"], a: 1, why: "Слабое шифрование + перехват = классический MitM по каналу." },
+    ];
+
+    const bankList = document.getElementById("bank-list");
+    const bankStat = document.getElementById("bank-stat");
+    const bankFilter = document.getElementById("bank-filter");
+    const bankShuffle = document.getElementById("bank-shuffle");
+
+    const quizArea = document.getElementById("quiz-area");
+    const quizBar = document.getElementById("quiz-bar");
+    const quizStat = document.getElementById("quiz-stat");
+    const quizCount = document.getElementById("quiz-count");
+    const quizStart = document.getElementById("quiz-start");
+    const quizResult = document.getElementById("quiz-result");
+    const theoryFullList = document.getElementById("theory-full-list");
+
+    function shuffleInPlace(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function renderBank() {
+      const q = bankFilter.value.trim().toLowerCase();
+      let items = QUESTIONS.map((item, idx) => ({ item, idx }));
+      if (q) items = items.filter(({ item }) => item.q.toLowerCase().includes(q));
+      if (bankShuffle.checked) items = shuffleInPlace(items);
+
+      bankStat.textContent = `${items.length} из ${QUESTIONS.length}`;
+      bankList.innerHTML = "";
+      items.forEach(({ item, idx }) => {
+        const card = document.createElement("article");
+        card.className = "card";
+        const correctLetter = LETTERS[item.a];
+        const optsHtml = item.opts.map((text, i) => {
+          const isC = i === item.a;
+          return `<li class="${isC ? "correct" : ""}"><span class="key">${LETTERS[i]}.</span>${escapeHtml(text)}</li>`;
+        }).join("");
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="q-num">#${idx + 1}</span>
+          </div>
+          <p class="q-text">${escapeHtml(item.q)}</p>
+          <ul class="opts">${optsHtml}</ul>
+          <details class="reason">
+            <summary>Почему ответ ${correctLetter}?</summary>
+            <p>${escapeHtml(item.why)}</p>
+          </details>`;
+        bankList.appendChild(card);
+      });
+    }
+
+    function renderTheoryFull() {
+      if (!theoryFullList) return;
+      const chunk = 15;
+      const total = QUESTIONS.length;
+      const blocks = [];
+
+      for (let start = 0; start < total; start += chunk) {
+        const end = Math.min(start + chunk, total);
+        const rows = QUESTIONS.slice(start, end).map((item, i) => {
+          const n = start + i + 1;
+          const letter = LETTERS[item.a];
+          return `
+            <div class="qa-mini">
+              <div><strong>#${n} · Ответ ${letter}</strong></div>
+              <div>${escapeHtml(item.q)}</div>
+              <div>Почему: ${escapeHtml(item.why)}</div>
+            </div>
+          `;
+        }).join("");
+        blocks.push(`
+          <details ${start === 0 ? "open" : ""}>
+            <summary>Вопросы ${start + 1}-${end}</summary>
+            ${rows}
+          </details>
+        `);
+      }
+
+      theoryFullList.innerHTML = blocks.join("");
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    document.querySelectorAll(".tabs button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-tab");
+        document.querySelectorAll(".tabs button").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        const panel = document.getElementById(`panel-${id}`);
+        if (panel) panel.classList.add("active");
+      });
+    });
+
+    let quizSession = { order: [], cursor: 0, answers: [], revealed: [] };
+
+    function startQuiz() {
+      quizResult.classList.remove("show");
+      quizResult.innerHTML = "";
+      let n = parseInt(quizCount.value, 10);
+      const order = QUESTIONS.map((_, i) => i);
+      shuffleInPlace(order);
+      if (Number.isFinite(n) && n < order.length) order.length = n;
+      quizSession = { order, cursor: 0, answers: new Array(order.length).fill(null), revealed: new Array(order.length).fill(false) };
+      quizStat.textContent = `Вопрос 1 / ${order.length}`;
+      quizBar.style.width = `${100 / order.length}%`;
+      renderQuizQuestion();
+    }
+
+    function renderQuizQuestion() {
+      const { order, cursor, answers } = quizSession;
+      if (!order.length) {
+        quizArea.innerHTML = "<p class=\"card\">Нет вопросов.</p>";
+        return;
+      }
+      const qidx = order[cursor];
+      const item = QUESTIONS[qidx];
+      const selected = answers[cursor];
+      const revealedThis = quizSession.revealed[cursor] === true;
+
+      const optsHtml = item.opts.map((text, i) => {
+        let cls = "";
+        const correctIndex = item.a;
+
+        if (revealedThis) {
+          if (i === correctIndex) cls = "right";
+          if (selected !== null && i === selected && selected !== correctIndex) cls = "wrong";
+          if (selected !== null && i === selected && selected === correctIndex) cls = "right";
+        } else {
+          if (selected !== null && selected === i) cls = "selected";
+        }
+
+        return `<li data-i="${i}" class="${cls}"><span class="key">${LETTERS[i]}.</span>${escapeHtml(text)}</li>`;
+      }).join("");
+
+      const correctLetter = LETTERS[item.a];
+      const hintSummary = revealedThis
+        ? `Ответ: ${correctLetter}. Почему?`
+        : `Почему ответ ${correctLetter}?`;
+
+      const liveText = revealedThis
+        ? (selected === item.a ? "Верно ✓" : `Неверно ✗ (правильный: ${correctLetter})`)
+        : "";
+
+      quizArea.innerHTML = `
+        <article class="card quiz-card">
+          <div class="card-top">
+            <span class="q-num">Тест · ${cursor + 1} / ${order.length}</span>
+          </div>
+          <p class="q-text">${escapeHtml(item.q)}</p>
+          <ul class="opts" id="quiz-opts">${optsHtml}</ul>
+          <div id="quiz-live" style="margin-top:10px;font-weight:700;color:${revealedThis ? (selected === item.a ? "var(--ok)" : "var(--danger)") : "var(--muted)"}">${escapeHtml(liveText)}</div>
+          <div class="quiz-actions">
+            <button type="button" class="btn" id="quiz-prev" ${cursor === 0 ? "disabled" : ""}>Назад</button>
+            <button type="button" class="btn primary" id="quiz-next">${cursor === order.length - 1 ? "Завершить" : "Дальше"}</button>
+          </div>
+          <details class="reason" id="quiz-hint" ${revealedThis ? "open" : ""} ${revealedThis ? "" : "style=\"display:none\""}>
+            <summary>${escapeHtml(hintSummary)}</summary>
+            <p id="quiz-hint-body">${escapeHtml(item.why)}</p>
+          </details>
+        </article>`;
+
+      const optsEl = document.getElementById("quiz-opts");
+      optsEl.querySelectorAll("li").forEach((li) => {
+        li.addEventListener("click", () => {
+          if (quizSession.revealed[cursor] === true) return; // после ответа фиксируем выбор и подсказку
+          const i = parseInt(li.getAttribute("data-i"), 10);
+          quizSession.answers[cursor] = i;
+          quizSession.revealed[cursor] = true;
+          renderQuizQuestion(); // перерисуем вопрос с подсветкой верно/неверно
+        });
+      });
+
+      document.getElementById("quiz-prev").addEventListener("click", () => {
+        if (cursor > 0) {
+          quizSession.cursor--;
+          quizStat.textContent = `Вопрос ${quizSession.cursor + 1} / ${order.length}`;
+          const pct = ((quizSession.cursor + 1) / order.length) * 100;
+          quizBar.style.width = `${pct}%`;
+          renderQuizQuestion();
+        }
+      });
+
+      document.getElementById("quiz-next").addEventListener("click", () => {
+        if (cursor < order.length - 1) {
+          quizSession.cursor++;
+          quizStat.textContent = `Вопрос ${quizSession.cursor + 1} / ${order.length}`;
+          const pct = ((quizSession.cursor + 1) / order.length) * 100;
+          quizBar.style.width = `${pct}%`;
+          renderQuizQuestion();
+        } else finishQuiz();
+      });
+    }
+
+    function finishQuiz() {
+      let correct = 0;
+      const { order, answers } = quizSession;
+      order.forEach((qidx, i) => {
+        if (answers[i] === QUESTIONS[qidx].a) correct++;
+      });
+      quizResult.innerHTML = `
+        <strong>Готово.</strong> Правильно: ${correct} из ${order.length}.
+        <div style="margin-top:10px;color:var(--muted);font-size:0.95rem">
+          Открой вкладку «Все вопросы» и пробегись по тем, где сомневался — так закрепляется быстрее всего.
+        </div>`;
+      quizResult.classList.add("show");
+
+      // Show hint for last question optional - show full review
+      const review = order.map((qidx, i) => {
+        const it = QUESTIONS[qidx];
+        const ok = answers[i] === it.a;
+        return `<li style="margin:6px 0"><span style="color:${ok ? "var(--ok)" : "var(--danger)"}">${ok ? "✓" : "✗"}</span> ${escapeHtml(it.q)} → ${LETTERS[it.a]}</li>`;
+      }).join("");
+      quizArea.innerHTML = `
+        <div class="card">
+          <h3 style="margin:0 0 10px;font-size:1.05rem">Разбор</h3>
+          <ul style="margin:0;padding-left:1.1rem;color:var(--muted);font-size:0.92rem">${review}</ul>
+          <div class="quiz-actions" style="margin-top:14px">
+            <button type="button" class="btn primary" id="quiz-again">Ещё раз</button>
+          </div>
+        </div>`;
+      document.getElementById("quiz-again").addEventListener("click", startQuiz);
+      quizBar.style.width = "100%";
+      quizStat.textContent = `Результат · ${correct} / ${order.length}`;
+    }
+
+    bankFilter.addEventListener("input", renderBank);
+    bankShuffle.addEventListener("change", renderBank);
+    quizStart.addEventListener("click", startQuiz);
+
+    renderBank();
+    renderTheoryFull();
+  </script>
+</body>
+</html>
