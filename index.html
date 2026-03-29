@@ -680,95 +680,98 @@
       });
     }
 
+    function pickByNumber(pool, n) {
+      if (!pool || !pool.length) return null;
+      return pool[(n - 1) % pool.length];
+    }
+
     function getInternetImageHtml(questionText, n) {
-      const img = getInternetImageData(questionText);
+      const img = getInternetImageData(questionText, n);
       if (!img) return getQuestionIllustration(questionText, n);
       const safeAlt = escapeHtml(img.alt);
       const safeCredit = escapeHtml(img.credit);
       const safeUrl = escapeHtml(img.url);
       return `<img src="${safeUrl}" alt="${safeAlt}" loading="lazy" referrerpolicy="no-referrer" />
-      <div class="ill-source">Реальная схема из интернета: ${safeCredit}</div>`;
+      <div class="ill-source">Индивидуальная схема из интернета: ${safeCredit}</div>`;
     }
 
-    function getInternetImageData(questionText) {
+    function getInternetImageData(questionText, n) {
       const q = questionText.toLowerCase();
+      const CIA_POOL = [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/8/88/Confidentiality_Integrity_Availability_triangle.png", alt: "CIA triad diagram", credit: "Wikimedia · CIA triangle" },
+        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/CIAJMK1209-en.svg", alt: "CIA triad wheel", credit: "Wikimedia · CIAJMK1209" },
+      ];
+      const PHISH_POOL = [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/1/19/Example_phishing_email.svg", alt: "Phishing email example", credit: "Wikimedia · Example phishing email" },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/1/1d/Phishing.PNG", alt: "Phishing dynamics chart", credit: "Wikimedia · Phishing dynamics" },
+      ];
+      const MITM_POOL = [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/e/e7/Man_in_the_middle_attack.svg", alt: "MITM attack diagram", credit: "Wikimedia · MITM attack" },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/8/89/Man-in-the-middle_attack.PNG", alt: "MITM basic diagram", credit: "Wikimedia · MITM basic" },
+      ];
+      const VPN_POOL = [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/a/ae/SSL_VPN_Topology-en.svg", alt: "SSL VPN topology diagram", credit: "Wikimedia · SSL VPN topology" },
+        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Access_VPN-like_dial-up_scenario.svg", alt: "Access VPN scenario diagram", credit: "Wikimedia · Access VPN scenario" },
+        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Hub-to-spoke_VPN-en.svg", alt: "Hub to spoke VPN topology", credit: "Wikimedia · Hub-to-spoke VPN" },
+      ];
+      const ASYM_POOL = [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Public_key_encryption.svg", alt: "Public key encryption diagram", credit: "Wikimedia · Public key encryption" },
+        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Public_key_making.svg", alt: "Public key generation diagram", credit: "Wikimedia · Public key making" },
+        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Public_key_signing.svg", alt: "Public key signing diagram", credit: "Wikimedia · Public key signing" },
+      ];
+      const HASH_POOL = [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/2/2b/Cryptographic_Hash_Function.svg", alt: "Cryptographic hash function diagram", credit: "Wikimedia · Cryptographic hash function" },
+        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Hash_function.svg", alt: "Hash function diagram", credit: "Wikimedia · Hash function" },
+      ];
+      const FIREWALL_POOL = [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/5/52/DMZ_network_diagram_1_firewall.png", alt: "Firewall and DMZ network diagram", credit: "Wikimedia · DMZ one-firewall" },
+        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/DMZ_network_diagram_2_firewall.svg", alt: "Dual firewall DMZ diagram", credit: "Wikimedia · DMZ two-firewall" },
+      ];
+      const AAA_POOL = [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/5/50/Drawing_RADIUS_1812.svg", alt: "RADIUS auth flow diagram", credit: "Wikimedia · RADIUS flow" },
+        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Two-factor_authentication_on_Wikimedia_as_of_2025_with_WebAuthn_screenshot.webp", alt: "MFA settings screenshot", credit: "Wikimedia · 2FA screenshot" },
+      ];
+      const SOC_POOL = [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/8/81/Basic_SIEM_Infrastructure.png", alt: "SIEM architecture diagram", credit: "Wikimedia · Basic SIEM infrastructure" },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/1/1d/Intrusion_Kill_Chain_-_v2.png", alt: "Intrusion kill chain diagram", credit: "Wikimedia · Intrusion kill chain" },
+      ];
+      const PRIVACY_POOL = [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/9/9a/DSGVO-Webseite-erstellen.png", alt: "GDPR infographic", credit: "Wikimedia · GDPR infographic" },
+        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Datenschutz_und_Datensicherheit,_logo.svg", alt: "Data protection logo", credit: "Wikimedia · Data protection logo" },
+      ];
 
       if (q.includes("confidentiality") || q.includes("integrity") || q.includes("availability") || q.includes("information security")) {
-        return {
-          url: "https://upload.wikimedia.org/wikipedia/commons/8/88/Confidentiality_Integrity_Availability_triangle.png",
-          alt: "CIA triad diagram",
-          credit: "Wikimedia Commons · CIA triangle",
-        };
+        return pickByNumber(CIA_POOL, n);
       }
       if (q.includes("phishing")) {
-        return {
-          url: "https://upload.wikimedia.org/wikipedia/commons/1/19/Example_phishing_email.svg",
-          alt: "Phishing email example",
-          credit: "Wikimedia Commons · Example phishing email",
-        };
+        return pickByNumber(PHISH_POOL, n);
       }
       if (q.includes("mitm") || q.includes("man-in-the-middle")) {
-        return {
-          url: "https://upload.wikimedia.org/wikipedia/commons/e/e7/Man_in_the_middle_attack.svg",
-          alt: "Man in the middle attack diagram",
-          credit: "Wikimedia Commons · MITM attack",
-        };
+        return pickByNumber(MITM_POOL, n);
       }
       if (q.includes("vpn") || q.includes("tls") || q.includes("ssl") || q.includes("handshake") || q.includes("tunnel") || q.includes("encapsulation") || q.includes("ipsec") || q.includes("wireguard") || q.includes("https")) {
-        return {
-          url: "https://upload.wikimedia.org/wikipedia/commons/a/ae/SSL_VPN_Topology-en.svg",
-          alt: "SSL VPN topology diagram",
-          credit: "Wikimedia Commons · SSL VPN topology",
-        };
+        return pickByNumber(VPN_POOL, n);
       }
       if (q.includes("rsa") || q.includes("asymmetric") || q.includes("public key") || q.includes("private key")) {
-        return {
-          url: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Public_key_encryption.svg",
-          alt: "Public key encryption diagram",
-          credit: "Wikimedia Commons · Public key encryption",
-        };
+        return pickByNumber(ASYM_POOL, n);
       }
       if (q.includes("hash") || q.includes("hmac") || q.includes("salt")) {
-        return {
-          url: "https://upload.wikimedia.org/wikipedia/commons/2/2b/Cryptographic_Hash_Function.svg",
-          alt: "Cryptographic hash function diagram",
-          credit: "Wikimedia Commons · Cryptographic hash function",
-        };
+        return pickByNumber(HASH_POOL, n);
       }
       if (q.includes("firewall") || q.includes("router") || q.includes("network segmentation") || q.includes("vlan") || q.includes("dhcp snooping") || q.includes("arp")) {
-        return {
-          url: "https://upload.wikimedia.org/wikipedia/commons/5/52/DMZ_network_diagram_1_firewall.png",
-          alt: "Firewall and DMZ network diagram",
-          credit: "Wikimedia Commons · DMZ firewall diagram",
-        };
+        return pickByNumber(FIREWALL_POOL, n);
       }
       if (q.includes("authentication") || q.includes("authorization") || q.includes("accounting") || q.includes("radius") || q.includes("tacacs") || q.includes("mfa") || q.includes("two-factor")) {
-        return {
-          url: "https://upload.wikimedia.org/wikipedia/commons/5/50/Drawing_RADIUS_1812.svg",
-          alt: "RADIUS authentication flow diagram",
-          credit: "Wikimedia Commons · RADIUS auth flow",
-        };
+        return pickByNumber(AAA_POOL, n);
       }
       if (q.includes("siem") || q.includes("logging") || q.includes("ids") || q.includes("ips") || q.includes("threat") || q.includes("modern cyber")) {
-        return {
-          url: "https://upload.wikimedia.org/wikipedia/commons/8/81/Basic_SIEM_Infrastructure.png",
-          alt: "SIEM infrastructure diagram",
-          credit: "Wikimedia Commons · Basic SIEM infrastructure",
-        };
+        return pickByNumber(SOC_POOL, n);
       }
       if (q.includes("gdpr") || q.includes("privacy") || q.includes("pii") || q.includes("data minimization") || q.includes("forgotten")) {
-        return {
-          url: "https://upload.wikimedia.org/wikipedia/commons/9/9a/DSGVO-Webseite-erstellen.png",
-          alt: "GDPR compliance infographic",
-          credit: "Wikimedia Commons · GDPR infographic",
-        };
+        return pickByNumber(PRIVACY_POOL, n);
       }
 
-      return {
-        url: "https://upload.wikimedia.org/wikipedia/commons/1/1d/Intrusion_Kill_Chain_-_v2.png",
-        alt: "Intrusion kill chain diagram",
-        credit: "Wikimedia Commons · Intrusion kill chain",
-      };
+      return pickByNumber(SOC_POOL, n);
     }
 
     function getQuickExplain(questionText, why) {
