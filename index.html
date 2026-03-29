@@ -234,6 +234,18 @@
       padding: 18px 20px;
       margin-bottom: 14px;
     }
+    .card-illustration {
+      margin: 8px 0 14px;
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at 20% 10%, #213147, #111826 65%);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    .card-illustration svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
     .card-top {
       display: flex;
       justify-content: space-between;
@@ -620,6 +632,7 @@
         const card = document.createElement("article");
         card.className = "card";
         const correctLetter = LETTERS[item.a];
+        const ill = getQuestionIllustration(item.q, idx + 1);
         const optsHtml = item.opts.map((text, i) => {
           const isC = i === item.a;
           return `<li class="${isC ? "correct" : ""}"><span class="key">${LETTERS[i]}.</span>${escapeHtml(text)}</li>`;
@@ -629,6 +642,7 @@
             <span class="q-num">#${idx + 1}</span>
           </div>
           <p class="q-text">${escapeHtml(item.q)}</p>
+          <div class="card-illustration">${ill}</div>
           <ul class="opts">${optsHtml}</ul>
           <details class="reason">
             <summary>Почему ответ ${correctLetter}?</summary>
@@ -636,6 +650,126 @@
           </details>`;
         bankList.appendChild(card);
       });
+    }
+
+    function getQuestionIllustration(questionText, n) {
+      const q = questionText.toLowerCase();
+      if (q.includes("vpn") || q.includes("tunnel") || q.includes("tls") || q.includes("ssl") || q.includes("https")) return svgTunnel(n);
+      if (q.includes("hash") || q.includes("hmac") || q.includes("salt")) return svgHash(n);
+      if (q.includes("rsa") || q.includes("asymmetric") || q.includes("public") || q.includes("private key")) return svgKeys(n);
+      if (q.includes("firewall") || q.includes("ids") || q.includes("ips") || q.includes("network segmentation") || q.includes("vlan")) return svgFirewall(n);
+      if (q.includes("phishing") || q.includes("threat") || q.includes("vulnerability") || q.includes("unauthorized")) return svgThreat(n);
+      if (q.includes("authentication") || q.includes("authorization") || q.includes("accounting") || q.includes("mfa") || q.includes("radius") || q.includes("tacacs")) return svgAAA(n);
+      if (q.includes("gdpr") || q.includes("privacy") || q.includes("pii") || q.includes("data minimization") || q.includes("forgotten")) return svgPrivacy(n);
+      if (q.includes("confidentiality") || q.includes("integrity") || q.includes("availability")) return svgCIA(n);
+      return svgShield(n);
+    }
+
+    function svgWrap(icon, label, num) {
+      return `
+      <svg viewBox="0 0 640 220" role="img" aria-label="${escapeHtml(label)}">
+        <defs>
+          <linearGradient id="gA${num}" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#5eead4"/>
+            <stop offset="100%" stop-color="#38bdf8"/>
+          </linearGradient>
+        </defs>
+        <rect x="12" y="12" width="616" height="196" rx="16" fill="#0f1726" stroke="#2a3548" />
+        <g>${icon}</g>
+        <text x="320" y="188" text-anchor="middle" fill="#8b98ad" font-size="16" font-family="Outfit,sans-serif">${escapeHtml(label)}</text>
+      </svg>`;
+    }
+
+    function svgShield(n) {
+      return svgWrap(`
+        <path d="M320 58l74 24v38c0 34-27 62-74 78-47-16-74-44-74-78V82z" fill="url(#gA${n})" opacity="0.28"/>
+        <path d="M320 70l56 18v30c0 25-19 46-56 60-37-14-56-35-56-60V88z" fill="none" stroke="url(#gA${n})" stroke-width="4"/>
+        <path d="M296 118l18 18 30-32" fill="none" stroke="#5eead4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      `, "Базовая защита информации", n);
+    }
+
+    function svgCIA(n) {
+      return svgWrap(`
+        <rect x="90" y="78" width="140" height="58" rx="10" fill="#152235" stroke="#5eead4"/>
+        <rect x="250" y="78" width="140" height="58" rx="10" fill="#152235" stroke="#38bdf8"/>
+        <rect x="410" y="78" width="140" height="58" rx="10" fill="#152235" stroke="#fbbf24"/>
+        <text x="160" y="113" text-anchor="middle" fill="#e8ecf2" font-size="14">C</text>
+        <text x="320" y="113" text-anchor="middle" fill="#e8ecf2" font-size="14">I</text>
+        <text x="480" y="113" text-anchor="middle" fill="#e8ecf2" font-size="14">A</text>
+      `, "CIA: Confidentiality, Integrity, Availability", n);
+    }
+
+    function svgThreat(n) {
+      return svgWrap(`
+        <rect x="84" y="88" width="224" height="72" rx="12" fill="#152235" stroke="#2a3548"/>
+        <rect x="98" y="102" width="196" height="44" rx="8" fill="#0f1726" stroke="#5eead4"/>
+        <path d="M392 88h120l24 40-24 40H392l-24-40z" fill="#3a1f24" stroke="#f87171"/>
+        <text x="452" y="132" text-anchor="middle" fill="#fca5a5" font-size="13">THREAT</text>
+        <path d="M308 124h72" stroke="#5eead4" stroke-width="4" stroke-linecap="round"/>
+      `, "Угроза пытается использовать слабое место", n);
+    }
+
+    function svgKeys(n) {
+      return svgWrap(`
+        <circle cx="230" cy="112" r="30" fill="none" stroke="#5eead4" stroke-width="6"/>
+        <path d="M260 112h82m-22 0v16m-20-16v12" stroke="#5eead4" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="410" cy="112" r="22" fill="none" stroke="#38bdf8" stroke-width="6"/>
+        <path d="M432 112h48m-18 0v10" stroke="#38bdf8" stroke-width="6" stroke-linecap="round"/>
+        <text x="230" y="156" text-anchor="middle" fill="#8b98ad" font-size="12">PUBLIC</text>
+        <text x="410" y="156" text-anchor="middle" fill="#8b98ad" font-size="12">PRIVATE</text>
+      `, "Пара ключей: публичный и приватный", n);
+    }
+
+    function svgHash(n) {
+      return svgWrap(`
+        <rect x="84" y="80" width="140" height="64" rx="10" fill="#152235" stroke="#5eead4"/>
+        <text x="154" y="118" text-anchor="middle" fill="#e8ecf2" font-size="14">INPUT</text>
+        <rect x="262" y="74" width="120" height="76" rx="12" fill="#0f1726" stroke="#38bdf8"/>
+        <text x="322" y="118" text-anchor="middle" fill="#e8ecf2" font-size="13">HASH()</text>
+        <rect x="420" y="80" width="140" height="64" rx="10" fill="#152235" stroke="#fbbf24"/>
+        <text x="490" y="118" text-anchor="middle" fill="#e8ecf2" font-size="14">A1F9...7C</text>
+        <path d="M224 112h38M382 112h38" stroke="#5eead4" stroke-width="4" stroke-linecap="round"/>
+      `, "Хеш: короткий отпечаток для проверки целостности", n);
+    }
+
+    function svgTunnel(n) {
+      return svgWrap(`
+        <rect x="76" y="96" width="110" height="46" rx="10" fill="#152235" stroke="#5eead4"/>
+        <rect x="454" y="96" width="110" height="46" rx="10" fill="#152235" stroke="#5eead4"/>
+        <path d="M194 118h252" stroke="#2a3548" stroke-width="24" stroke-linecap="round"/>
+        <path d="M194 118h252" stroke="url(#gA${n})" stroke-width="12" stroke-linecap="round" opacity="0.8"/>
+        <text x="320" y="98" text-anchor="middle" fill="#8b98ad" font-size="12">encrypted tunnel</text>
+      `, "VPN/TLS: защищенный туннель между сторонами", n);
+    }
+
+    function svgFirewall(n) {
+      return svgWrap(`
+        <rect x="88" y="84" width="180" height="72" rx="10" fill="#152235" stroke="#5eead4"/>
+        <rect x="372" y="84" width="180" height="72" rx="10" fill="#152235" stroke="#5eead4"/>
+        <rect x="280" y="70" width="80" height="100" rx="10" fill="#2b1c21" stroke="#f87171"/>
+        <path d="M292 94h56M292 116h56M292 138h56" stroke="#fca5a5" stroke-width="4" stroke-linecap="round"/>
+        <path d="M268 120h12M360 120h12" stroke="#5eead4" stroke-width="4" stroke-linecap="round"/>
+      `, "Firewall/IPS фильтрует сетевой трафик", n);
+    }
+
+    function svgAAA(n) {
+      return svgWrap(`
+        <circle cx="184" cy="112" r="38" fill="#152235" stroke="#5eead4"/><text x="184" y="118" text-anchor="middle" fill="#e8ecf2" font-size="14">AuthN</text>
+        <circle cx="320" cy="112" r="38" fill="#152235" stroke="#38bdf8"/><text x="320" y="118" text-anchor="middle" fill="#e8ecf2" font-size="14">AuthZ</text>
+        <circle cx="456" cy="112" r="38" fill="#152235" stroke="#fbbf24"/><text x="456" y="118" text-anchor="middle" fill="#e8ecf2" font-size="14">Acct</text>
+        <path d="M224 112h56M360 112h56" stroke="#8b98ad" stroke-width="3" stroke-linecap="round"/>
+      `, "AAA: кто ты, что можно, что делал", n);
+    }
+
+    function svgPrivacy(n) {
+      return svgWrap(`
+        <rect x="114" y="80" width="412" height="84" rx="12" fill="#152235" stroke="#5eead4"/>
+        <text x="178" y="122" text-anchor="middle" fill="#e8ecf2" font-size="14">PII</text>
+        <rect x="220" y="96" width="150" height="16" rx="6" fill="#2a3548"/>
+        <rect x="220" y="126" width="190" height="16" rx="6" fill="#2a3548"/>
+        <circle cx="470" cy="122" r="22" fill="#0f1726" stroke="#fbbf24" stroke-width="4"/>
+        <path d="M460 122l8 8 14-14" fill="none" stroke="#fbbf24" stroke-width="4" stroke-linecap="round"/>
+      `, "Privacy/GDPR: защищаем персональные данные", n);
     }
 
     function renderTheoryFull() {
