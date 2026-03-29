@@ -624,7 +624,7 @@
         const card = document.createElement("article");
         card.className = "card";
         const correctLetter = LETTERS[item.a];
-        const ill = getInternetImageHtml(item.q, idx + 1);
+        const ill = getInternetImageHtml(item.q, idx + 1, idx);
         const optsHtml = item.opts.map((text, i) => {
           const isC = i === item.a;
           return `<li class="${isC ? "correct" : ""}"><span class="key">${LETTERS[i]}.</span>${escapeHtml(text)}</li>`;
@@ -639,6 +639,7 @@
           `;
         bankList.appendChild(card);
       });
+      hydrateBankIllustrations(items);
     }
 
     function pickByNumber(pool, n) {
@@ -646,40 +647,84 @@
       return pool[(n - 1) % pool.length];
     }
 
-    function getInternetImageHtml(questionText, n) {
-      const img = getInternetImageData(questionText, n);
-      if (!img) return getQuestionIllustration(questionText, n);
-      const safeAlt = escapeHtml(img.alt);
-      const safeUrl = escapeHtml(img.url);
-      return `<img src="${safeUrl}" alt="${safeAlt}" loading="lazy" referrerpolicy="no-referrer" />`;
+    function getInternetImageHtml(questionText, n, idx) {
+      const kw = keywordFromQuestion(questionText);
+      const fallbackSvg = encodeURIComponent(getQuestionIllustration(questionText, n));
+      return `<img id="ill-${idx}" data-k="${escapeHtml(kw)}" src="data:image/svg+xml;utf8,${fallbackSvg}" alt="${escapeHtml(kw)}" loading="lazy" referrerpolicy="no-referrer" />`;
     }
 
-    function getInternetImageData(questionText, n) {
+    function keywordFromQuestion(questionText) {
       const q = questionText.toLowerCase();
-      let keyword = "cybersecurity";
+      let keyword = "cyber security illustration";
 
-      if (q.includes("phishing")) keyword = "phishing email scam";
-      else if (q.includes("firewall")) keyword = "firewall network security";
-      else if (q.includes("vpn")) keyword = "vpn tunnel network";
-      else if (q.includes("tls") || q.includes("ssl") || q.includes("https")) keyword = "tls ssl encryption";
-      else if (q.includes("rsa") || q.includes("asymmetric")) keyword = "public key cryptography";
-      else if (q.includes("symmetric") || q.includes("aes") || q.includes("des")) keyword = "symmetric encryption";
-      else if (q.includes("hash") || q.includes("hmac") || q.includes("salt")) keyword = "hash function cryptography";
-      else if (q.includes("authentication") || q.includes("mfa")) keyword = "multi factor authentication";
-      else if (q.includes("authorization") || q.includes("aaa") || q.includes("radius") || q.includes("tacacs")) keyword = "identity access management";
-      else if (q.includes("mitm") || q.includes("man-in-the-middle")) keyword = "man in the middle attack";
-      else if (q.includes("ids") || q.includes("ips") || q.includes("siem")) keyword = "security operations center";
-      else if (q.includes("gdpr") || q.includes("privacy") || q.includes("pii")) keyword = "data privacy protection";
-      else if (q.includes("vlan") || q.includes("segmentation")) keyword = "network segmentation vlan";
-      else if (q.includes("ssh") || q.includes("telnet")) keyword = "ssh secure remote access";
-      else if (q.includes("zero trust")) keyword = "zero trust security";
-      else if (q.includes("threat") || q.includes("vulnerability")) keyword = "cyber threat vulnerability";
-      else if (q.includes("cia") || q.includes("confidentiality") || q.includes("integrity") || q.includes("availability")) keyword = "cia triad information security";
+      if (q.includes("phishing")) keyword = "phishing illustration";
+      else if (q.includes("firewall")) keyword = "firewall illustration";
+      else if (q.includes("vpn")) keyword = "vpn illustration";
+      else if (q.includes("tls") || q.includes("ssl") || q.includes("https")) keyword = "ssl tls illustration";
+      else if (q.includes("rsa") || q.includes("asymmetric")) keyword = "public key cryptography illustration";
+      else if (q.includes("symmetric") || q.includes("aes") || q.includes("des")) keyword = "symmetric encryption illustration";
+      else if (q.includes("hash") || q.includes("hmac") || q.includes("salt")) keyword = "hash function illustration";
+      else if (q.includes("authentication") || q.includes("mfa")) keyword = "authentication illustration";
+      else if (q.includes("authorization") || q.includes("aaa") || q.includes("radius") || q.includes("tacacs")) keyword = "authorization illustration";
+      else if (q.includes("mitm") || q.includes("man-in-the-middle")) keyword = "man in the middle illustration";
+      else if (q.includes("ids") || q.includes("ips") || q.includes("siem")) keyword = "security monitoring illustration";
+      else if (q.includes("gdpr") || q.includes("privacy") || q.includes("pii")) keyword = "data privacy illustration";
+      else if (q.includes("vlan") || q.includes("segmentation")) keyword = "network segmentation illustration";
+      else if (q.includes("ssh") || q.includes("telnet")) keyword = "secure remote access illustration";
+      else if (q.includes("zero trust")) keyword = "zero trust illustration";
+      else if (q.includes("threat") || q.includes("vulnerability")) keyword = "cyber threat illustration";
+      else if (q.includes("cia") || q.includes("confidentiality") || q.includes("integrity") || q.includes("availability")) keyword = "cia triad illustration";
+      return keyword;
+    }
 
-      return {
-        url: `https://loremflickr.com/1280/720/${encodeURIComponent(keyword)}?lock=${n}`,
-        alt: keyword,
-      };
+    const poolCache = new Map();
+    const usedIllustrationUrls = new Set();
+
+    async function fetchIllustrationPool(keyword) {
+      if (poolCache.has(keyword)) return poolCache.get(keyword);
+      const api = "https://commons.wikimedia.org/w/api.php";
+      const params = new URLSearchParams({
+        action: "query",
+        format: "json",
+        origin: "*",
+        generator: "search",
+        gsrsearch: `${keyword} filetype:svg OR filetype:png`,
+        gsrnamespace: "6",
+        gsrlimit: "25",
+        prop: "imageinfo",
+        iiprop: "url|mime",
+      });
+      try {
+        const res = await fetch(`${api}?${params.toString()}`);
+        const data = await res.json();
+        const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
+        const urls = pages
+          .map((p) => p?.imageinfo?.[0])
+          .filter(Boolean)
+          .sort((a, b) => (a.mime === "image/svg+xml" ? -1 : 1) - (b.mime === "image/svg+xml" ? -1 : 1))
+          .map((ii) => ii.url)
+          .filter(Boolean);
+        poolCache.set(keyword, urls);
+        return urls;
+      } catch {
+        poolCache.set(keyword, []);
+        return [];
+      }
+    }
+
+    async function hydrateBankIllustrations(items) {
+      for (const { item, idx } of items) {
+        const imgEl = document.getElementById(`ill-${idx}`);
+        if (!imgEl) continue;
+        const keyword = keywordFromQuestion(item.q);
+        const pool = await fetchIllustrationPool(keyword);
+        let picked = pool.find((u) => !usedIllustrationUrls.has(u));
+        if (!picked) picked = pool[0];
+        if (picked) {
+          usedIllustrationUrls.add(picked);
+          imgEl.src = picked;
+        }
+      }
     }
 
     function getQuestionIllustration(questionText, n) {
