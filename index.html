@@ -254,6 +254,21 @@
       border-radius: 8px;
       background: #0b1320;
     }
+    .card-illustration.loading {
+      position: relative;
+      overflow: hidden;
+    }
+    .card-illustration.loading::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, #ffffff10, transparent);
+      animation: shimmer 1.1s infinite;
+    }
+    @keyframes shimmer {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(100%); }
+    }
     .card-top {
       display: flex;
       justify-content: space-between;
@@ -603,6 +618,7 @@
     const quizStart = document.getElementById("quiz-start");
     const quizResult = document.getElementById("quiz-result");
     const theoryFullList = document.getElementById("theory-full-list");
+    const ILL_CACHE_KEY = "infosec_illustration_cache_v1";
 
     function shuffleInPlace(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
@@ -634,7 +650,7 @@
             <span class="q-num">#${idx + 1}</span>
           </div>
           <p class="q-text">${escapeHtml(item.q)}</p>
-          <div class="card-illustration">${ill}</div>
+          <div class="card-illustration loading" id="ill-wrap-${idx}">${ill}</div>
           <ul class="opts">${optsHtml}</ul>
           `;
         bankList.appendChild(card);
@@ -650,7 +666,7 @@
     function getInternetImageHtml(questionText, n, idx) {
       const kw = keywordFromQuestion(questionText);
       const fallbackSvg = encodeURIComponent(getQuestionIllustration(questionText, n));
-      return `<img id="ill-${idx}" data-k="${escapeHtml(kw)}" src="data:image/svg+xml;utf8,${fallbackSvg}" alt="${escapeHtml(kw)}" loading="lazy" referrerpolicy="no-referrer" />`;
+      return `<img id="ill-${idx}" data-k="${escapeHtml(kw)}" src="data:image/svg+xml;utf8,${fallbackSvg}" alt="${escapeHtml(kw)}" loading="${idx < 10 ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer" />`;
     }
 
     function keywordFromQuestion(questionText) {
@@ -679,6 +695,22 @@
 
     const poolCache = new Map();
     const usedIllustrationUrls = new Set();
+
+    function loadIllustrationCache() {
+      try {
+        const raw = localStorage.getItem(ILL_CACHE_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") return parsed;
+      } catch {}
+      return {};
+    }
+
+    function saveIllustrationCache(map) {
+      try {
+        localStorage.setItem(ILL_CACHE_KEY, JSON.stringify(map));
+      } catch {}
+    }
 
     async function fetchIllustrationPool(keyword) {
       if (poolCache.has(keyword)) return poolCache.get(keyword);
@@ -713,18 +745,43 @@
     }
 
     async function hydrateBankIllustrations(items) {
+      const cacheMap = loadIllustrationCache();
+      const uniqueKeywords = [...new Set(items.map(({ item }) => keywordFromQuestion(item.q)))];
+
+      // 1) Prefill from cache instantly (visible cards get illustrations immediately)
+      for (const { item, idx } of items) {
+        const keyword = keywordFromQuestion(item.q);
+        const cached = cacheMap[keyword];
+        const imgEl = document.getElementById(`ill-${idx}`);
+        if (imgEl && cached) {
+          usedIllustrationUrls.add(cached);
+          imgEl.src = cached;
+          const wrap = document.getElementById(`ill-wrap-${idx}`);
+          if (wrap) wrap.classList.remove("loading");
+        }
+      }
+
+      // 2) Fetch pools in parallel by keyword (faster than sequential per-card)
+      const poolPairs = await Promise.all(uniqueKeywords.map(async (k) => [k, await fetchIllustrationPool(k)]));
+      const poolByKeyword = new Map(poolPairs);
+
+      // 3) Assign unique illustrations per question and persist keyword->url choice
       for (const { item, idx } of items) {
         const imgEl = document.getElementById(`ill-${idx}`);
         if (!imgEl) continue;
         const keyword = keywordFromQuestion(item.q);
-        const pool = await fetchIllustrationPool(keyword);
+        const pool = poolByKeyword.get(keyword) || [];
         let picked = pool.find((u) => !usedIllustrationUrls.has(u));
-        if (!picked) picked = pool[0];
-        if (picked) {
-          usedIllustrationUrls.add(picked);
-          imgEl.src = picked;
-        }
+        if (!picked) picked = cacheMap[keyword] || pool[0];
+        if (!picked) continue;
+
+        usedIllustrationUrls.add(picked);
+        if (imgEl.src !== picked) imgEl.src = picked;
+        cacheMap[keyword] = picked;
+        const wrap = document.getElementById(`ill-wrap-${idx}`);
+        if (wrap) wrap.classList.remove("loading");
       }
+      saveIllustrationCache(cacheMap);
     }
 
     function getQuestionIllustration(questionText, n) {
