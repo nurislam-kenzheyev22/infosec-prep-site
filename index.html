@@ -618,7 +618,6 @@
     const quizStart = document.getElementById("quiz-start");
     const quizResult = document.getElementById("quiz-result");
     const theoryFullList = document.getElementById("theory-full-list");
-    const ILL_CACHE_KEY = "infosec_illustration_cache_v1";
 
     function shuffleInPlace(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
@@ -650,12 +649,11 @@
             <span class="q-num">#${idx + 1}</span>
           </div>
           <p class="q-text">${escapeHtml(item.q)}</p>
-          <div class="card-illustration loading" id="ill-wrap-${idx}">${ill}</div>
+          <div class="card-illustration">${ill}</div>
           <ul class="opts">${optsHtml}</ul>
           `;
         bankList.appendChild(card);
       });
-      hydrateBankIllustrations(items);
     }
 
     function pickByNumber(pool, n) {
@@ -664,9 +662,10 @@
     }
 
     function getInternetImageHtml(questionText, n, idx) {
-      const kw = keywordFromQuestion(questionText);
-      const fallbackSvg = encodeURIComponent(getQuestionIllustration(questionText, n));
-      return `<img id="ill-${idx}" data-k="${escapeHtml(kw)}" src="data:image/svg+xml;utf8,${fallbackSvg}" alt="${escapeHtml(kw)}" loading="${idx < 10 ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer" />`;
+      const img = getInternetImageData(questionText, n);
+      const safeAlt = escapeHtml(img.alt);
+      const safeUrl = escapeHtml(img.url);
+      return `<img id="ill-${idx}" src="${safeUrl}" alt="${safeAlt}" loading="${idx < 10 ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer" />`;
     }
 
     function keywordFromQuestion(questionText) {
@@ -693,95 +692,33 @@
       return keyword;
     }
 
-    const poolCache = new Map();
-    const usedIllustrationUrls = new Set();
-
-    function loadIllustrationCache() {
-      try {
-        const raw = localStorage.getItem(ILL_CACHE_KEY);
-        if (!raw) return {};
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === "object") return parsed;
-      } catch {}
-      return {};
+    function getInternetImageData(questionText, n) {
+      const keyword = keywordFromQuestion(questionText);
+      const pool = getLocalIllustrationPool(keyword);
+      const picked = pool[(n - 1) % pool.length];
+      return { url: picked, alt: keyword };
     }
 
-    function saveIllustrationCache(map) {
-      try {
-        localStorage.setItem(ILL_CACHE_KEY, JSON.stringify(map));
-      } catch {}
-    }
-
-    async function fetchIllustrationPool(keyword) {
-      if (poolCache.has(keyword)) return poolCache.get(keyword);
-      const api = "https://commons.wikimedia.org/w/api.php";
-      const params = new URLSearchParams({
-        action: "query",
-        format: "json",
-        origin: "*",
-        generator: "search",
-        gsrsearch: `${keyword} filetype:svg OR filetype:png`,
-        gsrnamespace: "6",
-        gsrlimit: "25",
-        prop: "imageinfo",
-        iiprop: "url|mime",
-      });
-      try {
-        const res = await fetch(`${api}?${params.toString()}`);
-        const data = await res.json();
-        const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
-        const urls = pages
-          .map((p) => p?.imageinfo?.[0])
-          .filter(Boolean)
-          .sort((a, b) => (a.mime === "image/svg+xml" ? -1 : 1) - (b.mime === "image/svg+xml" ? -1 : 1))
-          .map((ii) => ii.url)
-          .filter(Boolean);
-        poolCache.set(keyword, urls);
-        return urls;
-      } catch {
-        poolCache.set(keyword, []);
-        return [];
-      }
-    }
-
-    async function hydrateBankIllustrations(items) {
-      const cacheMap = loadIllustrationCache();
-      const uniqueKeywords = [...new Set(items.map(({ item }) => keywordFromQuestion(item.q)))];
-
-      // 1) Prefill from cache instantly (visible cards get illustrations immediately)
-      for (const { item, idx } of items) {
-        const keyword = keywordFromQuestion(item.q);
-        const cached = cacheMap[keyword];
-        const imgEl = document.getElementById(`ill-${idx}`);
-        if (imgEl && cached) {
-          usedIllustrationUrls.add(cached);
-          imgEl.src = cached;
-          const wrap = document.getElementById(`ill-wrap-${idx}`);
-          if (wrap) wrap.classList.remove("loading");
-        }
-      }
-
-      // 2) Fetch pools in parallel by keyword (faster than sequential per-card)
-      const poolPairs = await Promise.all(uniqueKeywords.map(async (k) => [k, await fetchIllustrationPool(k)]));
-      const poolByKeyword = new Map(poolPairs);
-
-      // 3) Assign unique illustrations per question and persist keyword->url choice
-      for (const { item, idx } of items) {
-        const imgEl = document.getElementById(`ill-${idx}`);
-        if (!imgEl) continue;
-        const keyword = keywordFromQuestion(item.q);
-        const pool = poolByKeyword.get(keyword) || [];
-        let picked = pool.find((u) => !usedIllustrationUrls.has(u));
-        if (!picked) picked = cacheMap[keyword] || pool[0];
-        if (!picked) continue;
-
-        usedIllustrationUrls.add(picked);
-        if (imgEl.src !== picked) imgEl.src = picked;
-        cacheMap[keyword] = picked;
-        const wrap = document.getElementById(`ill-wrap-${idx}`);
-        if (wrap) wrap.classList.remove("loading");
-      }
-      saveIllustrationCache(cacheMap);
+    function getLocalIllustrationPool(keyword) {
+      const base = "assets/illustrations/bank/";
+      if (keyword.includes("phishing")) return [`${base}phishing_email.svg`, `${base}phishing_chart.png`];
+      if (keyword.includes("firewall")) return [`${base}firewall_dmz.png`, `${base}kill_chain.png`];
+      if (keyword.includes("vpn")) return [`${base}vpn_ssl_topology.svg`, `${base}firewall_dmz.png`];
+      if (keyword.includes("ssl tls")) return [`${base}vpn_ssl_topology.svg`, `${base}public_key_encryption.svg`];
+      if (keyword.includes("public key cryptography")) return [`${base}public_key_encryption.svg`, `${base}radius.svg`];
+      if (keyword.includes("symmetric encryption")) return [`${base}hash_function.svg`, `${base}public_key_encryption.svg`];
+      if (keyword.includes("hash function")) return [`${base}hash_function.svg`, `${base}siem.png`];
+      if (keyword.includes("authentication")) return [`${base}radius.svg`, `${base}public_key_encryption.svg`];
+      if (keyword.includes("authorization")) return [`${base}radius.svg`, `${base}siem.png`];
+      if (keyword.includes("man in the middle")) return [`${base}mitm.svg`, `${base}phishing_chart.png`];
+      if (keyword.includes("security monitoring")) return [`${base}siem.png`, `${base}kill_chain.png`];
+      if (keyword.includes("data privacy")) return [`${base}gdpr.png`, `${base}cia_triangle.png`];
+      if (keyword.includes("network segmentation")) return [`${base}firewall_dmz.png`, `${base}vpn_ssl_topology.svg`];
+      if (keyword.includes("secure remote access")) return [`${base}vpn_ssl_topology.svg`, `${base}radius.svg`];
+      if (keyword.includes("zero trust")) return [`${base}siem.png`, `${base}radius.svg`];
+      if (keyword.includes("cyber threat")) return [`${base}kill_chain.png`, `${base}mitm.svg`];
+      if (keyword.includes("cia triad")) return [`${base}cia_triangle.png`, `${base}gdpr.png`];
+      return [`${base}cia_triangle.png`, `${base}siem.png`, `${base}public_key_encryption.svg`];
     }
 
     function getQuestionIllustration(questionText, n) {
