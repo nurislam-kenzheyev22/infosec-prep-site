@@ -254,12 +254,6 @@
       border-radius: 8px;
       background: #0b1320;
     }
-    .ill-source {
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 0.8rem;
-      text-align: center;
-    }
     .card-top {
       display: flex;
       justify-content: space-between;
@@ -300,35 +294,7 @@
       margin-right: 8px;
       font-weight: 600;
     }
-    details.reason {
-      margin-top: 14px;
-      border-top: 1px solid var(--border);
-      padding-top: 12px;
-    }
-    details.reason summary {
-      cursor: pointer;
-      font-weight: 600;
-      color: var(--accent);
-      list-style: none;
-    }
-    details.reason summary::-webkit-details-marker { display: none; }
-    details.reason p {
-      margin: 10px 0 0;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-    .quick-explain {
-      margin-top: 10px;
-      border: 1px dashed var(--border);
-      border-radius: 10px;
-      background: #101827;
-      padding: 10px 12px;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-    .quick-explain strong {
-      color: var(--accent);
-    }
+    details.reason { display: none; }
     .quiz-card .opts li {
       cursor: pointer;
       transition: border-color 0.15s, background 0.15s;
@@ -659,7 +625,6 @@
         card.className = "card";
         const correctLetter = LETTERS[item.a];
         const ill = getInternetImageHtml(item.q, idx + 1);
-        const quick = getQuickExplain(item.q, item.why);
         const optsHtml = item.opts.map((text, i) => {
           const isC = i === item.a;
           return `<li class="${isC ? "correct" : ""}"><span class="key">${LETTERS[i]}.</span>${escapeHtml(text)}</li>`;
@@ -671,11 +636,7 @@
           <p class="q-text">${escapeHtml(item.q)}</p>
           <div class="card-illustration">${ill}</div>
           <ul class="opts">${optsHtml}</ul>
-          <details class="reason">
-            <summary>Почему ответ ${correctLetter}?</summary>
-            <p>${escapeHtml(item.why)}</p>
-            <div class="quick-explain">${quick}</div>
-          </details>`;
+          `;
         bankList.appendChild(card);
       });
     }
@@ -689,121 +650,36 @@
       const img = getInternetImageData(questionText, n);
       if (!img) return getQuestionIllustration(questionText, n);
       const safeAlt = escapeHtml(img.alt);
-      const safeCredit = escapeHtml(img.credit);
       const safeUrl = escapeHtml(img.url);
-      return `<img src="${safeUrl}" alt="${safeAlt}" loading="lazy" referrerpolicy="no-referrer" />
-      <div class="ill-source">Индивидуальная схема из интернета: ${safeCredit}</div>`;
+      return `<img src="${safeUrl}" alt="${safeAlt}" loading="lazy" referrerpolicy="no-referrer" />`;
     }
 
     function getInternetImageData(questionText, n) {
       const q = questionText.toLowerCase();
-      const CIA_POOL = [
-        { url: "https://upload.wikimedia.org/wikipedia/commons/8/88/Confidentiality_Integrity_Availability_triangle.png", alt: "CIA triad diagram", credit: "Wikimedia · CIA triangle" },
-        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/CIAJMK1209-en.svg", alt: "CIA triad wheel", credit: "Wikimedia · CIAJMK1209" },
-      ];
-      const PHISH_POOL = [
-        { url: "https://upload.wikimedia.org/wikipedia/commons/1/19/Example_phishing_email.svg", alt: "Phishing email example", credit: "Wikimedia · Example phishing email" },
-        { url: "https://upload.wikimedia.org/wikipedia/commons/1/1d/Phishing.PNG", alt: "Phishing dynamics chart", credit: "Wikimedia · Phishing dynamics" },
-      ];
-      const MITM_POOL = [
-        { url: "https://upload.wikimedia.org/wikipedia/commons/e/e7/Man_in_the_middle_attack.svg", alt: "MITM attack diagram", credit: "Wikimedia · MITM attack" },
-        { url: "https://upload.wikimedia.org/wikipedia/commons/8/89/Man-in-the-middle_attack.PNG", alt: "MITM basic diagram", credit: "Wikimedia · MITM basic" },
-      ];
-      const VPN_POOL = [
-        { url: "https://upload.wikimedia.org/wikipedia/commons/a/ae/SSL_VPN_Topology-en.svg", alt: "SSL VPN topology diagram", credit: "Wikimedia · SSL VPN topology" },
-        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Access_VPN-like_dial-up_scenario.svg", alt: "Access VPN scenario diagram", credit: "Wikimedia · Access VPN scenario" },
-        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Hub-to-spoke_VPN-en.svg", alt: "Hub to spoke VPN topology", credit: "Wikimedia · Hub-to-spoke VPN" },
-      ];
-      const ASYM_POOL = [
-        { url: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Public_key_encryption.svg", alt: "Public key encryption diagram", credit: "Wikimedia · Public key encryption" },
-        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Public_key_making.svg", alt: "Public key generation diagram", credit: "Wikimedia · Public key making" },
-        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Public_key_signing.svg", alt: "Public key signing diagram", credit: "Wikimedia · Public key signing" },
-      ];
-      const HASH_POOL = [
-        { url: "https://upload.wikimedia.org/wikipedia/commons/2/2b/Cryptographic_Hash_Function.svg", alt: "Cryptographic hash function diagram", credit: "Wikimedia · Cryptographic hash function" },
-        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Hash_function.svg", alt: "Hash function diagram", credit: "Wikimedia · Hash function" },
-      ];
-      const FIREWALL_POOL = [
-        { url: "https://upload.wikimedia.org/wikipedia/commons/5/52/DMZ_network_diagram_1_firewall.png", alt: "Firewall and DMZ network diagram", credit: "Wikimedia · DMZ one-firewall" },
-        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/DMZ_network_diagram_2_firewall.svg", alt: "Dual firewall DMZ diagram", credit: "Wikimedia · DMZ two-firewall" },
-      ];
-      const AAA_POOL = [
-        { url: "https://upload.wikimedia.org/wikipedia/commons/5/50/Drawing_RADIUS_1812.svg", alt: "RADIUS auth flow diagram", credit: "Wikimedia · RADIUS flow" },
-        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Two-factor_authentication_on_Wikimedia_as_of_2025_with_WebAuthn_screenshot.webp", alt: "MFA settings screenshot", credit: "Wikimedia · 2FA screenshot" },
-      ];
-      const SOC_POOL = [
-        { url: "https://upload.wikimedia.org/wikipedia/commons/8/81/Basic_SIEM_Infrastructure.png", alt: "SIEM architecture diagram", credit: "Wikimedia · Basic SIEM infrastructure" },
-        { url: "https://upload.wikimedia.org/wikipedia/commons/1/1d/Intrusion_Kill_Chain_-_v2.png", alt: "Intrusion kill chain diagram", credit: "Wikimedia · Intrusion kill chain" },
-      ];
-      const PRIVACY_POOL = [
-        { url: "https://upload.wikimedia.org/wikipedia/commons/9/9a/DSGVO-Webseite-erstellen.png", alt: "GDPR infographic", credit: "Wikimedia · GDPR infographic" },
-        { url: "https://commons.wikimedia.org/wiki/Special:FilePath/Datenschutz_und_Datensicherheit,_logo.svg", alt: "Data protection logo", credit: "Wikimedia · Data protection logo" },
-      ];
+      let keyword = "cybersecurity";
 
-      if (q.includes("confidentiality") || q.includes("integrity") || q.includes("availability") || q.includes("information security")) {
-        return pickByNumber(CIA_POOL, n);
-      }
-      if (q.includes("phishing")) {
-        return pickByNumber(PHISH_POOL, n);
-      }
-      if (q.includes("mitm") || q.includes("man-in-the-middle")) {
-        return pickByNumber(MITM_POOL, n);
-      }
-      if (q.includes("vpn") || q.includes("tls") || q.includes("ssl") || q.includes("handshake") || q.includes("tunnel") || q.includes("encapsulation") || q.includes("ipsec") || q.includes("wireguard") || q.includes("https")) {
-        return pickByNumber(VPN_POOL, n);
-      }
-      if (q.includes("rsa") || q.includes("asymmetric") || q.includes("public key") || q.includes("private key")) {
-        return pickByNumber(ASYM_POOL, n);
-      }
-      if (q.includes("hash") || q.includes("hmac") || q.includes("salt")) {
-        return pickByNumber(HASH_POOL, n);
-      }
-      if (q.includes("firewall") || q.includes("router") || q.includes("network segmentation") || q.includes("vlan") || q.includes("dhcp snooping") || q.includes("arp")) {
-        return pickByNumber(FIREWALL_POOL, n);
-      }
-      if (q.includes("authentication") || q.includes("authorization") || q.includes("accounting") || q.includes("radius") || q.includes("tacacs") || q.includes("mfa") || q.includes("two-factor")) {
-        return pickByNumber(AAA_POOL, n);
-      }
-      if (q.includes("siem") || q.includes("logging") || q.includes("ids") || q.includes("ips") || q.includes("threat") || q.includes("modern cyber")) {
-        return pickByNumber(SOC_POOL, n);
-      }
-      if (q.includes("gdpr") || q.includes("privacy") || q.includes("pii") || q.includes("data minimization") || q.includes("forgotten")) {
-        return pickByNumber(PRIVACY_POOL, n);
-      }
+      if (q.includes("phishing")) keyword = "phishing email scam";
+      else if (q.includes("firewall")) keyword = "firewall network security";
+      else if (q.includes("vpn")) keyword = "vpn tunnel network";
+      else if (q.includes("tls") || q.includes("ssl") || q.includes("https")) keyword = "tls ssl encryption";
+      else if (q.includes("rsa") || q.includes("asymmetric")) keyword = "public key cryptography";
+      else if (q.includes("symmetric") || q.includes("aes") || q.includes("des")) keyword = "symmetric encryption";
+      else if (q.includes("hash") || q.includes("hmac") || q.includes("salt")) keyword = "hash function cryptography";
+      else if (q.includes("authentication") || q.includes("mfa")) keyword = "multi factor authentication";
+      else if (q.includes("authorization") || q.includes("aaa") || q.includes("radius") || q.includes("tacacs")) keyword = "identity access management";
+      else if (q.includes("mitm") || q.includes("man-in-the-middle")) keyword = "man in the middle attack";
+      else if (q.includes("ids") || q.includes("ips") || q.includes("siem")) keyword = "security operations center";
+      else if (q.includes("gdpr") || q.includes("privacy") || q.includes("pii")) keyword = "data privacy protection";
+      else if (q.includes("vlan") || q.includes("segmentation")) keyword = "network segmentation vlan";
+      else if (q.includes("ssh") || q.includes("telnet")) keyword = "ssh secure remote access";
+      else if (q.includes("zero trust")) keyword = "zero trust security";
+      else if (q.includes("threat") || q.includes("vulnerability")) keyword = "cyber threat vulnerability";
+      else if (q.includes("cia") || q.includes("confidentiality") || q.includes("integrity") || q.includes("availability")) keyword = "cia triad information security";
 
-      return pickByNumber(SOC_POOL, n);
-    }
-
-    function getQuickExplain(questionText, why) {
-      const q = questionText.toLowerCase();
-      const whySafe = escapeHtml(why);
-
-      if (q.includes("vpn") || q.includes("tls") || q.includes("ssl") || q.includes("ipsec") || q.includes("wireguard") || q.includes("https")) {
-        return `<strong>Просто:</strong> это «защищённая труба» между двумя точками. Снаружи трафик видят, но прочитать не могут.<br>${whySafe}`;
-      }
-      if (q.includes("hash") || q.includes("hmac") || q.includes("salt")) {
-        return `<strong>Просто:</strong> хеш — как «отпечаток пальца» файла. Файл поменялся → отпечаток сразу другой.<br>${whySafe}`;
-      }
-      if (q.includes("rsa") || q.includes("asymmetric") || q.includes("public key") || q.includes("private key") || q.includes("encryption")) {
-        return `<strong>Просто:</strong> публичный ключ как «замок для всех», приватный — «ключ только у тебя».<br>${whySafe}`;
-      }
-      if (q.includes("firewall") || q.includes("ids") || q.includes("ips") || q.includes("segmentation") || q.includes("vlan") || q.includes("dhcp snooping") || q.includes("arp")) {
-        return `<strong>Просто:</strong> это «охранник сети»: проверяет, кого пускать, кого блокировать, и режет подозрительное.<br>${whySafe}`;
-      }
-      if (q.includes("authentication") || q.includes("authorization") || q.includes("accounting") || q.includes("radius") || q.includes("tacacs") || q.includes("mfa")) {
-        return `<strong>Просто:</strong> AAA = кто ты, что тебе можно, и что ты делал в системе.<br>${whySafe}`;
-      }
-      if (q.includes("phishing") || q.includes("threat") || q.includes("vulnerability") || q.includes("mitm")) {
-        return `<strong>Просто:</strong> это обман/атака, где тебя пытаются заставить отдать данные или использовать слабое место.<br>${whySafe}`;
-      }
-      if (q.includes("gdpr") || q.includes("privacy") || q.includes("pii") || q.includes("data minimization") || q.includes("forgotten")) {
-        return `<strong>Просто:</strong> персональные данные — это серьёзно: собирать минимум, хранить безопасно, удалять по правилам.<br>${whySafe}`;
-      }
-      if (q.includes("confidentiality") || q.includes("integrity") || q.includes("availability")) {
-        return `<strong>Просто:</strong> CIA = не дать читать лишним, не дать испортить, и держать доступным когда нужно.<br>${whySafe}`;
-      }
-
-      return `<strong>Просто:</strong> суть ИБ — защищать данные и системы от кражи, поломки и простоя.<br>${whySafe}`;
+      return {
+        url: `https://loremflickr.com/1280/720/${encodeURIComponent(keyword)}?lock=${n}`,
+        alt: keyword,
+      };
     }
 
     function getQuestionIllustration(questionText, n) {
