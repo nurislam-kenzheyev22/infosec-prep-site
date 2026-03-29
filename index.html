@@ -888,13 +888,8 @@
         return `<li data-i="${i}" class="${cls}"><span class="key">${LETTERS[i]}.</span>${escapeHtml(text)}</li>`;
       }).join("");
 
-      const correctLetter = LETTERS[item.a];
-      const hintSummary = revealedThis
-        ? `Ответ: ${correctLetter}. Почему?`
-        : `Почему ответ ${correctLetter}?`;
-
       const liveText = revealedThis
-        ? (selected === item.a ? "Верно ✓" : `Неверно ✗ (правильный: ${correctLetter})`)
+        ? (selected === item.a ? "Верно ✓" : `Неверно ✗`)
         : "";
 
       quizArea.innerHTML = `
@@ -909,10 +904,6 @@
             <button type="button" class="btn" id="quiz-prev" ${cursor === 0 ? "disabled" : ""}>Назад</button>
             <button type="button" class="btn primary" id="quiz-next">${cursor === order.length - 1 ? "Завершить" : "Дальше"}</button>
           </div>
-          <details class="reason" id="quiz-hint" ${revealedThis ? "open" : ""} ${revealedThis ? "" : "style=\"display:none\""}>
-            <summary>${escapeHtml(hintSummary)}</summary>
-            <p id="quiz-hint-body">${escapeHtml(item.why)}</p>
-          </details>
         </article>`;
 
       const optsEl = document.getElementById("quiz-opts");
