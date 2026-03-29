@@ -303,23 +303,17 @@
       color: var(--muted);
       font-size: 0.95rem;
     }
-    .ext-links {
+    .quick-explain {
       margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      background: #101827;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
     }
-    .ext-links a {
-      font-size: 0.85rem;
+    .quick-explain strong {
       color: var(--accent);
-      text-decoration: none;
-      border: 1px solid var(--border);
-      background: #102132;
-      padding: 6px 10px;
-      border-radius: 999px;
-    }
-    .ext-links a:hover {
-      border-color: var(--accent);
     }
     .quiz-card .opts li {
       cursor: pointer;
@@ -651,7 +645,7 @@
         card.className = "card";
         const correctLetter = LETTERS[item.a];
         const ill = getQuestionIllustration(item.q, idx + 1);
-        const ext = getQuestionResources(item.q);
+        const quick = getQuickExplain(item.q, item.why);
         const optsHtml = item.opts.map((text, i) => {
           const isC = i === item.a;
           return `<li class="${isC ? "correct" : ""}"><span class="key">${LETTERS[i]}.</span>${escapeHtml(text)}</li>`;
@@ -666,72 +660,42 @@
           <details class="reason">
             <summary>Почему ответ ${correctLetter}?</summary>
             <p>${escapeHtml(item.why)}</p>
-            <div class="ext-links">${ext}</div>
+            <div class="quick-explain">${quick}</div>
           </details>`;
         bankList.appendChild(card);
       });
     }
 
-    function mkLink(url, label) {
-      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
-    }
-
-    function getQuestionResources(questionText) {
+    function getQuickExplain(questionText, why) {
       const q = questionText.toLowerCase();
+      const whySafe = escapeHtml(why);
 
       if (q.includes("vpn") || q.includes("tls") || q.includes("ssl") || q.includes("ipsec") || q.includes("wireguard") || q.includes("https")) {
-        return [
-          mkLink("https://www.cloudflare.com/learning/ssl/what-is-ssl/", "TLS/SSL с иллюстрациями"),
-          mkLink("https://en.wikipedia.org/wiki/Virtual_private_network", "VPN (Wikipedia, схемы)"),
-        ].join("");
+        return `<strong>Просто:</strong> это «защищённая труба» между двумя точками. Снаружи трафик видят, но прочитать не могут.<br>${whySafe}`;
       }
       if (q.includes("hash") || q.includes("hmac") || q.includes("salt")) {
-        return [
-          mkLink("https://www.cloudflare.com/learning/cryptography/what-is-hashing/", "Hashing с картинками"),
-          mkLink("https://en.wikipedia.org/wiki/HMAC", "HMAC (Wikipedia, диаграммы)"),
-        ].join("");
+        return `<strong>Просто:</strong> хеш — как «отпечаток пальца» файла. Файл поменялся → отпечаток сразу другой.<br>${whySafe}`;
       }
       if (q.includes("rsa") || q.includes("asymmetric") || q.includes("public key") || q.includes("private key") || q.includes("encryption")) {
-        return [
-          mkLink("https://www.cloudflare.com/learning/ssl/how-does-public-key-encryption-work/", "Asymmetric encryption (визуально)"),
-          mkLink("https://en.wikipedia.org/wiki/RSA_(cryptosystem)", "RSA (Wikipedia, схемы)"),
-        ].join("");
+        return `<strong>Просто:</strong> публичный ключ как «замок для всех», приватный — «ключ только у тебя».<br>${whySafe}`;
       }
       if (q.includes("firewall") || q.includes("ids") || q.includes("ips") || q.includes("segmentation") || q.includes("vlan") || q.includes("dhcp snooping") || q.includes("arp")) {
-        return [
-          mkLink("https://www.cisco.com/c/en/us/products/security/firewalls/what-is-a-firewall.html", "Firewall explained"),
-          mkLink("https://www.cloudflare.com/learning/security/threats/what-is-arp-spoofing/", "ARP spoofing/DAI визуально"),
-        ].join("");
+        return `<strong>Просто:</strong> это «охранник сети»: проверяет, кого пускать, кого блокировать, и режет подозрительное.<br>${whySafe}`;
       }
       if (q.includes("authentication") || q.includes("authorization") || q.includes("accounting") || q.includes("radius") || q.includes("tacacs") || q.includes("mfa")) {
-        return [
-          mkLink("https://www.cloudflare.com/learning/access-management/what-is-multi-factor-authentication/", "MFA с примерами"),
-          mkLink("https://en.wikipedia.org/wiki/AAA_(computer_security)", "AAA model (Wikipedia)"),
-        ].join("");
+        return `<strong>Просто:</strong> AAA = кто ты, что тебе можно, и что ты делал в системе.<br>${whySafe}`;
       }
       if (q.includes("phishing") || q.includes("threat") || q.includes("vulnerability") || q.includes("mitm")) {
-        return [
-          mkLink("https://www.cloudflare.com/learning/access-management/phishing-attack/", "Phishing (визуальные примеры)"),
-          mkLink("https://owasp.org/www-community/attacks/", "OWASP атаки (иллюстрации/схемы)"),
-        ].join("");
+        return `<strong>Просто:</strong> это обман/атака, где тебя пытаются заставить отдать данные или использовать слабое место.<br>${whySafe}`;
       }
       if (q.includes("gdpr") || q.includes("privacy") || q.includes("pii") || q.includes("data minimization") || q.includes("forgotten")) {
-        return [
-          mkLink("https://gdpr.eu/what-is-gdpr/", "GDPR explained"),
-          mkLink("https://www.cloudflare.com/learning/privacy/what-is-pii/", "PII с инфографикой"),
-        ].join("");
+        return `<strong>Просто:</strong> персональные данные — это серьёзно: собирать минимум, хранить безопасно, удалять по правилам.<br>${whySafe}`;
       }
       if (q.includes("confidentiality") || q.includes("integrity") || q.includes("availability")) {
-        return [
-          mkLink("https://www.techtarget.com/whatis/definition/Confidentiality-integrity-and-availability-CIA", "CIA triad с рисунками"),
-          mkLink("https://en.wikipedia.org/wiki/Information_security", "InfoSec (Wikipedia)"),
-        ].join("");
+        return `<strong>Просто:</strong> CIA = не дать читать лишним, не дать испортить, и держать доступным когда нужно.<br>${whySafe}`;
       }
 
-      return [
-        mkLink("https://www.cloudflare.com/learning/security/what-is-information-security/", "Information Security (Cloudflare)"),
-        mkLink("https://en.wikipedia.org/wiki/Computer_security", "Computer Security (Wikipedia)"),
-      ].join("");
+      return `<strong>Просто:</strong> суть ИБ — защищать данные и системы от кражи, поломки и простоя.<br>${whySafe}`;
     }
 
     function getQuestionIllustration(questionText, n) {
